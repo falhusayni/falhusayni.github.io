@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محاكاة تفاعلية – صعوبات التعلم | SPED 100</title>
+<style>
+  :root {
+    --primary: #1A6B3A;
+    --accent: #C8A951;
+    --danger: #e74c3c;
+    --warn: #f39c12;
+    --bg: #eef6f1;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --muted: #7f8c8d;
+    --border: #dce1e7;
+    --correct: #d5f5e3;
+    --wrong: #fde8e6;
+    --correct-border: #27ae60;
+    --wrong-border: #c0392b;
+    --tab-active: #1A6B3A;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; font-size: 17px; }
+
+  .header { background: linear-gradient(135deg, #1A6B3A 0%, #124d2a 100%); color: white; padding: 20px 16px 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .header h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .header p  { font-size: .85rem; opacity: .85; }
+  .progress-wrap { background: rgba(255,255,255,.2); border-radius: 20px; height: 6px; margin-top: 10px; overflow: hidden; }
+  .progress-bar  { background: #f9e79f; height: 100%; border-radius: 20px; transition: width .4s ease; }
+  .progress-label { font-size: .7rem; opacity:.8; margin-top:4px; }
+
+  .section-nav { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+  .section-nav::-webkit-scrollbar { display: none; }
+  .nav-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-size: .84rem; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+  .nav-pill.active { background: var(--primary); color: white; }
+  .nav-pill.done { background: #d4edde; border-color: var(--primary); color: var(--primary); }
+  .nav-pill.done::after { content: " ✓"; }
+
+  .main { padding: 16px; max-width: 700px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: var(--card); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+  .sec-title { font-size: 1.05rem; font-weight: 800; color: var(--primary); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px solid #f9e79f; }
+
+  /* Scenario */
+  .scenario-box { background: linear-gradient(135deg, #fdf6e3, #fdebd0); border: 2px solid #f39c12; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .scenario-box h3 { color: #7d6608; font-size: .95rem; margin-bottom: 10px; font-weight: 800; }
+  .scenario-box p  { font-size: .86rem; color: #6b5900; line-height: 1.8; }
+  .scenario-box .q-box { background: rgba(26,107,58,.12); border-right: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 10px 12px; margin-top: 12px; font-size: .86rem; color: var(--primary); font-weight: 700; }
+
+  /* Tabs */
+  .tab-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab-btn { flex: 1; padding: 9px 6px; border-radius: 10px 10px 0 0; border: 2px solid var(--border); background: #f8f9fa; color: var(--muted); font-size: .82rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; border-bottom: none; }
+  .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .tab-pane { display: none; background: white; border: 2px solid var(--border); border-radius: 0 14px 14px 14px; padding: 16px; font-size: .86rem; line-height: 1.8; }
+  .tab-pane.active { display: block; }
+  .tab-pane strong { color: var(--primary); }
+
+  /* LD cards */
+  .ld-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .ld-card { background: white; border-radius: 12px; border: 2px solid var(--border); cursor: pointer; transition: all .2s; overflow: hidden; }
+  .ld-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .ld-card .ld-head { padding: 12px 10px; display: flex; align-items: center; gap: 8px; }
+  .ld-card .ld-icon { font-size: 1.6rem; }
+  .ld-card .ld-name { font-size: .8rem; font-weight: 800; color: var(--text); line-height: 1.3; }
+  .ld-card .ld-body { padding: 0 10px 12px; font-size: .76rem; color: var(--muted); line-height: 1.6; display: none; border-top: 1px solid var(--border); padding-top: 10px; }
+  .ld-card.open { border-color: var(--primary); background: #edf7f1; }
+  .ld-card.open .ld-body { display: block; }
+  .ld-card.open .ld-name { color: var(--primary); }
+
+  /* Characteristics grid */
+  .char-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .char-item { background: white; border-radius: 10px; padding: 10px 12px; border: 1px solid var(--border); font-size: .8rem; line-height: 1.5; display: flex; align-items: flex-start; gap: 8px; }
+  .char-item .ci { font-size: 1.2rem; flex-shrink:0; }
+
+  /* Matching game */
+  .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .match-col { display: flex; flex-direction: column; gap: 6px; }
+  .match-col-title { font-size: .78rem; font-weight: 800; color: var(--muted); text-align: center; margin-bottom: 4px; }
+  .match-item { padding: 10px 12px; border-radius: 10px; border: 2px solid var(--border); background: white; font-size: .8rem; cursor: pointer; transition: all .2s; text-align: center; line-height: 1.4; user-select: none; }
+  .match-item.selected  { border-color: var(--primary); background: #e6f4ec; color: var(--primary); font-weight: 700; }
+  .match-item.matched   { border-color: var(--correct-border); background: var(--correct); color: #1a5b36; cursor: default; }
+  .match-item.wrong-flash { border-color: var(--wrong-border); background: var(--wrong); }
+  .match-score { text-align: center; font-size: .84rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+
+  /* Strategy cards */
+  .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .strategy-card { background: white; border-radius: 12px; border: 2px solid var(--border); padding: 14px 12px; }
+  .strategy-card .s-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .strategy-card .s-name { font-size: .82rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+  .strategy-card .s-desc { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+
+  .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .do-list  { background: #eafaf1; border-radius: 12px; padding: 14px; border: 1px solid #27ae60; }
+  .dont-list{ background: #fde8e6; border-radius: 12px; padding: 14px; border: 1px solid #e74c3c; }
+  .do-list h4   { color: #1a5b36; font-size: .82rem; margin-bottom: 8px; }
+  .dont-list h4 { color: #8b1a1a; font-size: .82rem; margin-bottom: 8px; }
+  .do-list li, .dont-list li { font-size: .77rem; margin-right: 14px; line-height: 1.6; color: var(--text); }
+
+  /* Quiz */
+  .q-num  { font-size: .82rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .q-text { font-size: 1.02rem; font-weight: 700; line-height: 1.6; margin-bottom: 14px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn { width: 100%; text-align: right; padding: 13px 15px; border-radius: 10px; border: 2px solid var(--border); background: white; color: var(--text); font-size: .95rem; cursor: pointer; transition: all .2s; font-family: inherit; line-height: 1.5; }
+  .opt-btn:hover:not(:disabled) { border-color: var(--primary); background: #e6f4ec; }
+  .opt-btn.correct { border-color: var(--correct-border); background: var(--correct); color: #1a5b36; }
+  .opt-btn.wrong   { border-color: var(--wrong-border);   background: var(--wrong);   color: #8b1a1a; }
+  .opt-btn:disabled { cursor: default; }
+  .feedback { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .91rem; line-height: 1.7; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: var(--correct); border: 1px solid var(--correct-border); color: #1a5b36; }
+  .feedback.bad { background: var(--wrong);   border: 1px solid var(--wrong-border);   color: #8b1a1a; }
+
+  /* Nav */
+  .nav-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .btn { flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: .95rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; }
+  .btn-primary   { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #124d2a; }
+  .btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-secondary:hover { background: #e6f4ec; }
+  .btn-success   { background: #27ae60; color: white; }
+  .btn-success:hover { background: #1e8449; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn-sm { font-size: .8rem; padding: 9px; }
+
+  /* Result */
+  .result-screen { text-align: center; padding: 30px 20px; }
+  .result-trophy { font-size: 4rem; margin-bottom: 10px; }
+  .result-score  { font-size: 2.5rem; font-weight: 900; color: var(--primary); }
+  .result-msg    { font-size: 1rem; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+  .score-bar-wrap { background: var(--border); border-radius: 20px; height: 10px; margin: 16px 0; overflow: hidden; }
+  .score-bar { background: var(--accent); height: 100%; border-radius: 20px; transition: width 1s ease; }
+  .result-list { text-align: right; margin-top: 18px; }
+  .result-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: .84rem; }
+  .result-item.ok  { background: var(--correct); }
+  .result-item.bad { background: var(--wrong); }
+
+  /* Submit panel */
+  .submit-panel {
+    background: linear-gradient(135deg, #1A6B3A, #124d2a);
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 18px;
+    text-align: center;
+  }
+  .submit-panel h3 { font-size: 1.06rem; margin-bottom: 8px; }
+  .submit-panel p  { font-size: .88rem; opacity:.88; margin-bottom:14px; line-height:1.6; }
+  .input-field {
+    width: 100%; padding: 11px 14px; border-radius: 10px; border: none;
+    font-size: .9rem; font-family: inherit; margin-bottom: 10px;
+    background: rgba(255,255,255,.9); color: var(--text);
+    outline: none; text-align: right;
+  }
+  .input-field:focus { background: white; }
+  .submit-info { background: rgba(255,255,255,.15); border-radius:10px; padding:10px 14px; font-size:.8rem; margin-bottom:12px; line-height:1.7; text-align:right; }
+
+  .info-block { background: #e6f4ec; border-right: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 12px 14px; margin-bottom: 12px; font-size: .94rem; line-height: 1.7; }
+  .info-block strong { color: var(--primary); }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-card { background: white; border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .stat-card .num { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+  .stat-card .lbl { font-size: .72rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+  .toast { position: fixed; bottom: 24px; right: 50%; transform: translateX(50%); background: #2c3e50; color: white; padding: 10px 20px; border-radius: 30px; font-size: .85rem; z-index: 999; opacity: 0; transition: opacity .3s; text-align: center; max-width: 300px; }
+  .toast.show { opacity: 1; }
+
+  @media (min-width: 500px) { .ld-grid { grid-template-columns: 1fr 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📖 صعوبات التعلم – Learning Disabilities</h1>
+  <p>محاكاة تفاعلية | SPED 100 | الوحدة الثالثة</p>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:16.6%"></div></div>
+  <div class="progress-label" id="progressLabel">القسم 1 من 6</div>
+</div>
+
+<div class="section-nav">
+  <button class="nav-pill active" onclick="goSection(0)">السيناريو</button>
+  <button class="nav-pill" onclick="goSection(1)">التعريف</button>
+  <button class="nav-pill" onclick="goSection(2)">أنواع الصعوبات</button>
+  <button class="nav-pill" onclick="goSection(3)">الخصائص</button>
+  <button class="nav-pill" onclick="goSection(4)">التدريس والإرشاد</button>
+  <button class="nav-pill" onclick="goSection(5)">اختبر نفسك</button>
+</div>
+
+<div class="main">
+
+  <!-- ═══ SEC 0: Scenario ═══ -->
+  <div class="section active" id="sec0">
+    <p class="sec-title">🧑‍🎓 تعرّف على سامر</p>
+
+    <div class="scenario-box">
+      <h3>📌 سامر في الصف الثالث الابتدائي — طالب ذكي يُحيّر معلمه!</h3>
+      <p>
+        سامر نشيط، يُشارك في الفصل، ويُجيب على الأسئلة الشفهية بدقة.
+        لكنه يُعاني كثيرًا في القراءة والكتابة — يُعكس الحروف،
+        يقرأ ببطء، ويُخطئ في إملاء كلمات بسيطة.
+        <br><br>
+        معلمه في حيرة: <em>"كيف يكون ذكيًا جدًا شفهيًا، ولا يستطيع قراءة كلمة بسيطة؟"</em>
+      </p>
+      <div class="q-box">
+        💭 ما رأيك؟ هل سامر كسول؟ أم يحتاج إلى عقاب أشد؟ أم ثمة سبب آخر؟
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="sec-title">💡 الإجابة الحقيقية</p>
+      <div class="info-block">
+        <strong>سامر لا يكسل ولا يتهاون —</strong> هو يُعاني من <strong>صعوبة تعلّمية حقيقية</strong>
+        في القراءة. عقله يعمل جيدًا، لكن طريقة معالجته للرموز والحروف مختلفة.
+        هذا النوع من الصعوبات يُسمّى عُسر القراءة (Dyslexia)، وهو أشيع أنواع صعوبات التعلم.
+      </div>
+      <p style="font-size:.84rem;line-height:1.8;">
+        في هذه المحاكاة ستتعرّف على <strong>تعريف صعوبات التعلم</strong>، أنواعها، خصائصها،
+        وأهم أساليب التدريس الفعّالة — حتى تكون مستعدًا لدعم طلاب مثل سامر.
+      </p>
+    </div>
+
+    <div class="card">
+      <p style="font-size:.96rem; font-weight:700; margin-bottom:10px; color:var(--primary);">📊 توزيع درجات المقرر (من 100):</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num" style="color:var(--primary)">10</div><div class="lbl">الحضور والمشاركة<br><span style="font-size:.72rem;color:#888">(يشمل الاختبار القبلي والبعدي)</span></div></div>
+        <div class="stat-card"><div class="num" style="color:var(--primary)">30</div><div class="lbl">الذكاء الاصطناعي<br><span style="font-size:.72rem;color:#888">٩ محاكاات (×٢د) + نشاطان (×٦د)</span></div></div>
+        <div class="stat-card"><div class="num" style="color:var(--primary)">20</div><div class="lbl">الاختبار النصفي</div></div>
+        <div class="stat-card"><div class="num" style="color:var(--primary)">40</div><div class="lbl">الاختبار النهائي</div></div>
+      </div>
+      <div class="info-block">
+        <strong>ما يعنيك الآن:</strong> إكمال هذه المحاكاة يُمثّل <strong>٢ درجتين</strong> من أصل ٣٠ درجة
+        المخصصة لعناصر الذكاء الاصطناعي. تأكّد من إرسال نتيجتك في نهاية الاختبار.
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-primary" onclick="nextSection()">التالي ► التعريف</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEC 1: Definitions ═══ -->
+  <div class="section" id="sec1">
+    <p class="sec-title">📜 تعريف صعوبات التعلم</p>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab(0)">تعريف IDEA (الأمريكي)</button>
+      <button class="tab-btn" onclick="switchTab(1)">تعريف NJCLD</button>
+    </div>
+
+    <div class="tab-pane active" id="tab0">
+      <strong>IDEA – Individuals with Disabilities Education Act</strong><br>
+      قانون التعليم الأمريكي لذوي الإعاقة يُعرّف صعوبات التعلم بأنها:<br><br>
+      <em>"اضطراب في واحدة أو أكثر من العمليات النفسية الأساسية المتضمنة في فهم اللغة المكتوبة أو المنطوقة أو استخدامها، والذي يظهر كقصور في القدرة على الاستماع أو التفكير أو الكلام أو القراءة أو الكتابة أو التهجئة أو إجراء العمليات الحسابية."</em>
+      <br><br>
+      <strong>ملاحظة جوهرية:</strong> لا تشمل الصعوبات الناتجة عن إعاقة حسية أو حركية أو فكرية أو اضطرابات انفعالية أو حرمان بيئي أو ثقافي.
+    </div>
+
+    <div class="tab-pane" id="tab1">
+      <strong>NJCLD – National Joint Committee on Learning Disabilities</strong><br>
+      اللجنة الوطنية المشتركة لصعوبات التعلم تُعرّفها بأنها:<br><br>
+      <em>"مجموعة غير متجانسة من الاضطرابات تتجلّى في صعوبات ملحوظة في اكتساب مهارات الاستماع والكلام والقراءة والكتابة والاستدلال والقدرة الحسابية واستخدامها."</em>
+      <br><br>
+      <strong>الإضافة الجوهرية في هذا التعريف:</strong>
+      <ul style="margin-right:16px;margin-top:8px;">
+        <li>تُعدّ ذاتية المنشأ (Intrinsic to the individual)</li>
+        <li>مرتبطة بخلل في الجهاز العصبي المركزي</li>
+        <li>قد تظهر مع إعاقات أخرى لكنها ليست نتيجة لها مباشرة</li>
+      </ul>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <p style="font-size:.9rem;font-weight:700;margin-bottom:10px;color:var(--primary);">⚖️ مقارنة التعريفَين:</p>
+      <div style="font-size:.82rem;line-height:1.8;">
+        <div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start;">
+          <span>🟣</span><span><strong>القاسم المشترك:</strong> الذكاء طبيعي أو فوق المتوسط، والصعوبة محددة في مجال معين.</span>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start;">
+          <span>🟡</span><span><strong>NJCLD أشمل:</strong> يُضيف الاستدلال ويُصرّح بالأساس العصبي.</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span>🔵</span><span><strong>كلاهما يتفق:</strong> الصعوبة ليست نتيجة إعاقة حسية أو فكرية أو حرمان بيئي.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="prevSection()">◄ السابق</button>
+      <button class="btn btn-primary" onclick="nextSection()">التالي ► الأنواع</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEC 2: LD Types ═══ -->
+  <div class="section" id="sec2">
+    <p class="sec-title">🔍 أنواع صعوبات التعلم – انقر لمعرفة المزيد</p>
+
+    <div class="info-block">
+      <strong>تذكّر سامر؟</strong> صعوبته في القراءة والكتابة تُصنَّف ضمن أنواع محددة.
+      اكتشف كل نوع بالنقر على البطاقة.
+    </div>
+
+    <div class="ld-grid">
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">📚</div><div class="ld-name">عُسر القراءة<br><small style="font-weight:400;color:var(--muted);">Dyslexia</small></div></div>
+        <div class="ld-body">صعوبة في التعرف على الكلمات، التهجئة، وفهم المقروء. يُعكس الطالب الحروف (b/d) أو ينقلب ترتيب الكلمات. الأكثر شيوعًا — وهو ما يُعاني منه سامر تحديدًا.</div>
+      </div>
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">✏️</div><div class="ld-name">عُسر الكتابة<br><small style="font-weight:400;color:var(--muted);">Dysgraphia</small></div></div>
+        <div class="ld-body">صعوبة في الكتابة اليدوية — الخط غير مقروء رغم الجهد. قد يواجه الطالب مشكلة في الإمساك بالقلم أو تنظيم الأفكار خطيًا.</div>
+      </div>
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">🔢</div><div class="ld-name">عُسر الحساب<br><small style="font-weight:400;color:var(--muted);">Dyscalculia</small></div></div>
+        <div class="ld-body">صعوبة في فهم الأرقام وتذكر جداول الضرب وإجراء العمليات الحسابية. ليس ضعفًا في الذكاء — بل معالجة مختلفة للرموز الرقمية.</div>
+      </div>
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">👂</div><div class="ld-name">معالجة سمعية<br><small style="font-weight:400;color:var(--muted);">Auditory Processing</small></div></div>
+        <div class="ld-body">الطالب يسمع جيدًا لكن دماغه لا يُعالج ما يسمعه بكفاءة. يحتاج التعليمات أكثر من مرة وقد يخلط بين الأصوات المتشابهة.</div>
+      </div>
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">🎯</div><div class="ld-name">صعوبات الانتباه<br><small style="font-weight:400;color:var(--muted);">Attention Difficulties</small></div></div>
+        <div class="ld-body">صعوبة في تركيز الانتباه لفترة كافية. قد يُرافق ذلك ADHD، وهو يُؤثر سلبًا على الأداء الأكاديمي دون ضعف في الذكاء.</div>
+      </div>
+      <div class="ld-card" onclick="toggleLD(this)">
+        <div class="ld-head"><div class="ld-icon">🗣️</div><div class="ld-name">اضطراب اللغة<br><small style="font-weight:400;color:var(--muted);">Language Disorder</small></div></div>
+        <div class="ld-body">صعوبة في استيعاب اللغة أو إنتاجها شفهيًا أو كتابيًا. يشمل ضعف المفردات وصعوبة تكوين الجمل السليمة.</div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="prevSection()">◄ السابق</button>
+      <button class="btn btn-primary" onclick="nextSection()">التالي ► الخصائص</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEC 3: Characteristics + Matching ═══ -->
+  <div class="section" id="sec3">
+    <p class="sec-title">🧩 خصائص ذوي صعوبات التعلم</p>
+
+    <div class="card">
+      <p style="font-size:.9rem;font-weight:700;margin-bottom:10px;color:var(--primary);">⚡ أبرز الخصائص:</p>
+      <div class="char-grid">
+        <div class="char-item"><div class="ci">🔄</div><div>فجوة بين الذكاء والأداء الأكاديمي</div></div>
+        <div class="char-item"><div class="ci">📉</div><div>تدنّي التحصيل في مادة بعينها</div></div>
+        <div class="char-item"><div class="ci">🧠</div><div>ذكاء طبيعي أو فوق المتوسط</div></div>
+        <div class="char-item"><div class="ci">👁️</div><div>لا توجد إعاقة حسية أو حركية</div></div>
+        <div class="char-item"><div class="ci">🔀</div><div>صعوبة في التنظيم والتخطيط</div></div>
+        <div class="char-item"><div class="ci">💬</div><div>أداء شفهي أفضل من الكتابي</div></div>
+        <div class="char-item"><div class="ci">😤</div><div>صعوبات اجتماعية وعاطفية مصاحبة</div></div>
+        <div class="char-item"><div class="ci">📚</div><div>مشكلة في الذاكرة العاملة</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-size:.9rem;font-weight:700;margin-bottom:10px;color:var(--primary);">🔬 أسباب صعوبات التعلم:</p>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:.85rem;line-height:1.7;">
+        <div style="background:#f0e9ff;border-radius:10px;padding:10px 14px;display:flex;gap:10px;"><span>🧬</span><div><strong>وراثية/جينية:</strong> تنتشر في الأسر وتزداد احتمالية حدوثها مع وجود تاريخ عائلي.</div></div>
+        <div style="background:#f0e9ff;border-radius:10px;padding:10px 14px;display:flex;gap:10px;"><span>🧠</span><div><strong>عصبية:</strong> اختلاف في نشاط مناطق الدماغ المسؤولة عن القراءة والتهجئة.</div></div>
+        <div style="background:#f0e9ff;border-radius:10px;padding:10px 14px;display:flex;gap:10px;"><span>🤱</span><div><strong>ما قبل الولادة:</strong> عوامل أثناء الحمل كالتعرض للكحول أو بعض الأدوية.</div></div>
+      </div>
+    </div>
+
+    <!-- Matching Game -->
+    <div class="card">
+      <p style="font-size:.9rem;font-weight:700;margin-bottom:12px;color:var(--primary);">🎮 نشاط: صِل النوع بالوصف</p>
+      <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">انقر على اسم الصعوبة ثم انقر على الوصف المناسب لها</p>
+      <div class="match-score" id="matchScore">المُطابَق: 0 / 4</div>
+      <div class="match-area">
+        <div class="match-col">
+          <div class="match-col-title">نوع الصعوبة</div>
+          <div id="matchTypes"></div>
+        </div>
+        <div class="match-col">
+          <div class="match-col-title">الوصف</div>
+          <div id="matchClues"></div>
+        </div>
+      </div>
+      <div class="nav-btns" style="margin-top:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="resetMatch()">🔄 إعادة النشاط</button>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="prevSection()">◄ السابق</button>
+      <button class="btn btn-primary" onclick="nextSection()">التالي ► التدريس</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEC 4: Teaching ═══ -->
+  <div class="section" id="sec4">
+    <p class="sec-title">🏫 أساليب التدريس والآداب</p>
+
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <div class="s-icon">📋</div>
+        <div class="s-name">التدريس المباشر<br><small style="font-weight:400;color:var(--muted);">Direct Instruction</small></div>
+        <div class="s-desc">تقديم محتوى منظّم خطوةً بخطوة بتعليمات واضحة وتغذية راجعة فورية. فعّال جدًا لصعوبات القراءة.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="s-icon">🎨</div>
+        <div class="s-name">التعلم المتمايز<br><small style="font-weight:400;color:var(--muted);">Differentiated Instruction</small></div>
+        <div class="s-desc">تكييف المحتوى والطريقة وأداة التقييم لتناسب احتياجات كل طالب. مناسب للفصول الدامجة.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="s-icon">💻</div>
+        <div class="s-name">التقنية المساعدة<br><small style="font-weight:400;color:var(--muted);">Assistive Technology</small></div>
+        <div class="s-desc">تطبيقات تحويل النص إلى صوت، والكلام إلى نص، والقواميس المرئية — تُعوّض مناطق الضعف.</div>
+      </div>
+      <div class="strategy-card">
+        <div class="s-icon">👥</div>
+        <div class="s-name">التعلم التعاوني<br><small style="font-weight:400;color:var(--muted);">Cooperative Learning</small></div>
+        <div class="s-desc">العمل في مجموعات صغيرة متنوعة يُعزّز الثقة ويُخفّض الضغط الأكاديمي.</div>
+      </div>
+    </div>
+
+    <div class="do-dont">
+      <div class="do-list">
+        <h4>✅ افعل</h4>
+        <ul>
+          <li>اعطِه وقتًا إضافيًا في الاختبارات</li>
+          <li>استخدم التعليمات متعددة الحواس</li>
+          <li>قدّم المحتوى بطرق بصرية ومسموعة</li>
+          <li>احتفل بتقدمه مهما صغر</li>
+        </ul>
+      </div>
+      <div class="dont-list">
+        <h4>❌ تجنّب</h4>
+        <ul>
+          <li>مقارنته بزملائه علنًا</li>
+          <li>تفسير تأخره بالكسل أو قلة الذكاء</li>
+          <li>تجاهل صعوباته أو الاستهزاء بها</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <strong>تطبيق عملي — ماذا نفعل مع سامر؟</strong><br>
+      ١. نُقيّمه بأسئلة شفهية بدلًا من القراءة الصامتة.<br>
+      ٢. نستخدم تطبيق نص-إلى-صوت أثناء المذاكرة.<br>
+      ٣. نعطيه وقتًا إضافيًا في الاختبارات الكتابية.<br>
+      ٤. نُخبر أسرته أن الأمر ليس تقصيرًا — بل حالة تعليمية قابلة للدعم.
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="prevSection()">◄ السابق</button>
+      <button class="btn btn-primary" onclick="nextSection()">اختبر نفسك ►</button>
+    </div>
+  </div>
+
+  <!-- ═══ SEC 5: Quiz ═══ -->
+  <div class="section" id="sec5">
+    <p class="sec-title">📝 اختبر معلوماتك – صعوبات التعلم</p>
+
+    <div class="card" id="quizCard">
+      <div class="q-num"  id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="opts"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="nav-btns" style="margin-top:14px;">
+        <button class="btn btn-primary" id="nextQBtn" onclick="nextQ()" disabled>السؤال التالي ►</button>
+      </div>
+    </div>
+
+    <div class="card result-screen" id="resultCard" style="display:none;">
+      <div class="result-trophy" id="resTrophy">🏆</div>
+      <div class="result-score"  id="resScore"></div>
+      <div class="result-msg"    id="resMsg"></div>
+      <div class="score-bar-wrap"><div class="score-bar" id="resBar" style="width:0%"></div></div>
+      <div class="result-list"   id="resList"></div>
+
+      <!-- SUBMIT PANEL -->
+      <div class="submit-panel" id="submitPanel">
+        <h3>📤 أرسل نتيجتك إلى المقرر</h3>
+        <p>يُسجَّل اطلاعك على المحاكاة ودرجتك في سجل المقرر.<br>يُرجى تعبئة البيانات وإرسالها.</p>
+        <input class="input-field" id="stdName" type="text" placeholder="اسمك الكامل" />
+        <input class="input-field" id="stdId"   type="text" placeholder="رقمك الجامعي" />
+        <div class="submit-info" id="submitInfo"></div>
+        <button class="btn btn-success" onclick="submitResult()" style="width:100%;border-radius:10px;">
+          ✅ إرسال النتيجة
+        </button>
+        <p style="font-size:.72rem; margin-top:8px; opacity:.8;">
+          سيفتح نموذج Google Forms لتأكيد الإرسال
+        </p>
+      </div>
+
+      <button class="btn btn-secondary" style="margin-top:12px;width:100%;" onclick="restartQuiz()">
+        🔄 إعادة الاختبار
+      </button>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="prevSection()">◄ السابق</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══ CONFIG — ضع رابط Google Form هنا ══ */
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc9521N4_q_M1Gdp_U3XX6-zkpdDHQ7CdSQ4CtJp3__1eP9mg/viewform";
+
+/* ══ Navigation ══ */
+const SECTIONS = 6;
+let currentSection = 0;
+const sectionDone = Array(SECTIONS).fill(false);
+
+function goSection(idx) {
+  document.querySelector(`#sec${currentSection}`).classList.remove('active');
+  document.querySelectorAll('.nav-pill')[currentSection].classList.remove('active');
+  currentSection = idx;
+  document.querySelector(`#sec${currentSection}`).classList.add('active');
+  const pills = document.querySelectorAll('.nav-pill');
+  pills[currentSection].classList.add('active');
+  sectionDone.forEach((d,i)=>{ if(d && i!==currentSection) pills[i].classList.add('done'); });
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(idx===3) buildMatch();
+  if(idx===5) initQuiz();
+}
+function nextSection() { sectionDone[currentSection]=true; if(currentSection<SECTIONS-1) goSection(currentSection+1); }
+function prevSection() { if(currentSection>0) goSection(currentSection-1); }
+function updateProgress() {
+  const pct = Math.round(((currentSection+1)/SECTIONS)*100);
+  document.getElementById('progressBar').style.width = pct+'%';
+  document.getElementById('progressLabel').textContent = `القسم ${currentSection+1} من ${SECTIONS}`;
+}
+
+/* ══ Tabs ══ */
+function switchTab(i) {
+  document.querySelectorAll('.tab-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  document.querySelectorAll('.tab-pane').forEach((p,j)=>p.classList.toggle('active',j===i));
+}
+
+/* ══ LD cards ══ */
+function toggleLD(el) {
+  const was = el.classList.contains('open');
+  document.querySelectorAll('.ld-card').forEach(c=>c.classList.remove('open'));
+  if(!was) el.classList.add('open');
+}
+
+/* ══ Matching game ══ */
+const matchPairs = [
+  { type:"عُسر القراءة",            clue:"يُعكس الحرف b ويكتبه d" },
+  { type:"عُسر الكتابة",            clue:"خطّه غير مقروء رغم الجهد" },
+  { type:"عُسر الحساب",             clue:"لا يستطيع تذكّر جدول الضرب" },
+  { type:"صعوبة المعالجة السمعية",  clue:"يحتاج التعليمات مرات عدة" },
+];
+let selectedType=null, selectedClue=null, matchedCount=0;
+
+function buildMatch(){
+  matchedCount=0; selectedType=null; selectedClue=null;
+  updateMatchScore();
+  const shuffledClues=[...matchPairs].sort(()=>Math.random()-.5);
+  const tDiv=document.getElementById('matchTypes'); tDiv.innerHTML='';
+  const cDiv=document.getElementById('matchClues'); cDiv.innerHTML='';
+  matchPairs.forEach(p=>{
+    const el=document.createElement('div'); el.className='match-item'; el.textContent=p.type;
+    el.dataset.value=p.type; el.onclick=()=>clickType(el); tDiv.appendChild(el);
+  });
+  shuffledClues.forEach(p=>{
+    const el=document.createElement('div'); el.className='match-item'; el.textContent=p.clue;
+    el.dataset.value=p.type; el.onclick=()=>clickClue(el); cDiv.appendChild(el);
+  });
+}
+function clickType(el){
+  if(el.classList.contains('matched')) return;
+  document.querySelectorAll('#matchTypes .match-item').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected'); selectedType=el;
+  if(selectedClue) tryMatch();
+}
+function clickClue(el){
+  if(el.classList.contains('matched')) return;
+  document.querySelectorAll('#matchClues .match-item').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected'); selectedClue=el;
+  if(selectedType) tryMatch();
+}
+function tryMatch(){
+  const correct = selectedType.dataset.value === selectedClue.dataset.value;
+  if(correct){
+    [selectedType,selectedClue].forEach(e=>{e.classList.remove('selected');e.classList.add('matched');e.onclick=null;});
+    matchedCount++;
+    updateMatchScore();
+    if(matchedCount===matchPairs.length) showToast('🎉 أحسنت! طابقت جميع الأزواج!');
+  } else {
+    [selectedType,selectedClue].forEach(e=>{e.classList.add('wrong-flash');});
+    setTimeout(()=>[selectedType,selectedClue].forEach(e=>{e.classList.remove('wrong-flash','selected');}),600);
+  }
+  selectedType=null; selectedClue=null;
+}
+function resetMatch(){ buildMatch(); }
+function updateMatchScore(){ document.getElementById('matchScore').textContent=`المُطابَق: ${matchedCount} / ${matchPairs.length}`; }
+
+/* ══ Quiz ══ */
+const questions = [
+  {
+    q: "ما التعريف الأدق لصعوبات التعلم؟",
+    opts:["تأخر دراسي عام نتيجة ضعف القدرات الذهنية","اضطراب في العمليات النفسية الأساسية مع ذكاء طبيعي","إعاقة حسية تؤثر على الفهم","ضعف دافعية الطالب نحو التعلم"],
+    ans:1, exp:"صعوبات التعلم تُعرَّف بوجود فجوة غير مُتوقَّعة بين الذكاء (الطبيعي) والأداء الأكاديمي الفعلي."
+  },
+  {
+    q: "ما الذي يميّز صعوبات التعلم عن الإعاقة الفكرية؟",
+    opts:["الإعاقة الفكرية أكثر شيوعًا","في صعوبات التعلم الذكاء طبيعي والصعوبة محددة","صعوبات التعلم تشمل جميع المواد","الإعاقة الفكرية تُصيب الكبار فقط"],
+    ans:1, exp:"الفارق الجوهري: في صعوبات التعلم يكون الذكاء طبيعيًا أو فوق المتوسط، بينما في الإعاقة الفكرية يوجد قصور في الوظائف العقلية."
+  },
+  {
+    q: "سامر في المثال الذي بدأنا به — يُعكس الحروف ويقرأ ببطء. أيّ نوع من صعوبات التعلم يُمثّل هذا؟",
+    opts:["عُسر الحساب","صعوبة المعالجة السمعية","عُسر القراءة (Dyslexia)","عُسر الكتابة"],
+    ans:2, exp:"عُسر القراءة (Dyslexia) هو الأكثر شيوعًا ويتسم بعكس الحروف وبطء القراءة وصعوبة التهجئة."
+  },
+  {
+    q: "طالب يسمع جيدًا، لكنه يطلب إعادة التعليمات مرارًا ويخلط بين الأصوات المتشابهة. ما الصعوبة التي يُعاني منها؟",
+    opts:["عُسر القراءة","اضطراب اللغة","صعوبة المعالجة السمعية","عُسر الكتابة"],
+    ans:2, exp:"صعوبة المعالجة السمعية (Auditory Processing Disorder): الجهاز السمعي سليم لكن الدماغ لا يُعالج المعلومات السمعية بكفاءة."
+  },
+  {
+    q: "أيّ من التالي يُمثّل الأسلوب الأنسب لدعم طالب يُعاني من عُسر القراءة؟",
+    opts:["إلزامه بالقراءة الصامتة يوميًا لتحسين مستواه","مقارنته بزملائه لتحفيزه على التحسن","استخدام تطبيقات تحويل النص إلى صوت وإعطائه وقتًا إضافيًا","تخفيض معايير التقييم بشكل كامل"],
+    ans:2, exp:"التقنية المساعدة والوقت الإضافي من أكثر استراتيجيات التدخل فاعلية مع عُسر القراءة."
+  },
+  {
+    q: "وفق قانون IDEA، ما الذي لا يُعدّ من صعوبات التعلم؟",
+    opts:["صعوبة القراءة مع ذكاء طبيعي","صعوبة الكتابة مع ذكاء طبيعي","تدني التحصيل بسبب حرمان بيئي أو ثقافي","صعوبة الحساب مع ذكاء طبيعي"],
+    ans:2, exp:"IDEA يستثني الصعوبات الناتجة عن حرمان بيئي أو ثقافي أو عدم كفاية فرص التعليم."
+  },
+  {
+    q: "ما الفائدة الأساسية من أسلوب التعلم التعاوني مع ذوي صعوبات التعلم؟",
+    opts:["تقليل الحاجة إلى التقييم","يُعزّز الثقة بالنفس ويُخفّض الضغط الأكاديمي","تجنّب تكييف المحتوى","يُغني عن برامج الدعم الفردي"],
+    ans:1, exp:"العمل في مجموعات صغيرة يُخفّف التركيز على نقاط الضعف الفردية ويُعزّز المشاركة الإيجابية."
+  },
+  {
+    q: "أيّ من التالي يُعبّر عن ممارسة خاطئة تجاه طالب يُعاني من صعوبات تعلّم؟",
+    opts:["استخدام تعليمات متعددة الحواس","الاحتفاء بتقدمه مهما كان صغيرًا","مقارنته بزملائه علنًا وتفسير تأخره بالكسل","إعطاؤه وقتًا إضافيًا في الاختبارات"],
+    ans:2, exp:"مقارنة الطالب علنًا وتفسير صعوباته بالكسل تُؤذي ثقته بنفسه وتُزيد المشكلة تعقيدًا. صعوبات التعلم حالة عصبية، ليست اختيارًا."
+  }
+];
+
+let qIndex=0, score=0;
+const answered=[];
+
+function initQuiz(){
+  qIndex=0; score=0; answered.length=0;
+  document.getElementById('quizCard').style.display='block';
+  document.getElementById('resultCard').style.display='none';
+  renderQ();
+}
+function renderQ(){
+  const q=questions[qIndex];
+  document.getElementById('qNum').textContent=`السؤال ${qIndex+1} من ${questions.length}`;
+  document.getElementById('qText').textContent=q.q;
+  const opts=document.getElementById('opts'); opts.innerHTML='';
+  q.opts.forEach((o,i)=>{ const b=document.createElement('button'); b.className='opt-btn'; b.textContent=o; b.onclick=()=>selectOpt(i); opts.appendChild(b); });
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('nextQBtn').disabled=true;
+  document.getElementById('nextQBtn').textContent=qIndex===questions.length-1?'عرض النتائج 🏆':'السؤال التالي ►';
+}
+function selectOpt(i){
+  const q=questions[qIndex];
+  const btns=document.querySelectorAll('.opt-btn'); btns.forEach(b=>b.disabled=true);
+  const ok=(i===q.ans);
+  btns[i].classList.add(ok?'correct':'wrong');
+  if(!ok) btns[q.ans].classList.add('correct');
+  const fb=document.getElementById('feedback');
+  fb.textContent=(ok?'✅ إجابة صحيحة! ':'❌ إجابة خاطئة. ')+q.exp;
+  fb.className='feedback show '+(ok?'ok':'bad');
+  if(ok) score++;
+  answered.push({q:q.q, correct:ok});
+  document.getElementById('nextQBtn').disabled=false;
+}
+function nextQ(){ qIndex++; if(qIndex>=questions.length){showResult();return;} renderQ(); }
+function showResult(){
+  document.getElementById('quizCard').style.display='none';
+  const res=document.getElementById('resultCard'); res.style.display='block';
+  const pct=Math.round((score/questions.length)*100);
+  let trophy='🏆',msg='';
+  if(pct>=80){trophy='🏆';msg='ممتاز! أنت مؤهّل لدعم طلاب مثل سامر بكفاءة عالية.';}
+  else if(pct>=60){trophy='🎓';msg='جيد جدًا! راجع الأجزاء التي أخطأت فيها ثم طبّق ما تعلمت.';}
+  else{trophy='📖';msg='المهم أنك شاركت وتعلمت! راجع التفسيرات أعلاه واحتفظ بها مرجعاً لدعم طلاب مثل سامر.';}
+  document.getElementById('resTrophy').textContent=trophy;
+  document.getElementById('resScore').textContent=`${score} / ${questions.length}`;
+  document.getElementById('resMsg').textContent=msg;
+  setTimeout(()=>document.getElementById('resBar').style.width=pct+'%',200);
+  const list=document.getElementById('resList'); list.innerHTML='<p style="font-weight:700;margin-bottom:8px;font-size:.85rem;">تفاصيل إجاباتك:</p>';
+  answered.forEach((a,i)=>{ const d=document.createElement('div'); d.className='result-item '+(a.correct?'ok':'bad'); d.innerHTML=`<span>${a.correct?'✅':'❌'}</span><span style="font-size:.8rem;">س${i+1}: ${a.q.substring(0,55)}…</span>`; list.appendChild(d); });
+  // للتعلم: تُعرض النتيجة الحقيقية على الشاشة، لكن المُرسَل للسجل دائماً 100%
+  document.getElementById('submitInfo').innerHTML=`<strong>📊 مشاركتك:</strong> أجبت على ${questions.length} أسئلة وتعلّمت من التغذية الراجعة ✅<br><strong>📚 المحاكاة:</strong> صعوبات التعلم – المحاكاة الثانية<br><span style="font-size:.8rem;opacity:.8">تُحتسب مشاركتك كاملةً بغض النظر عن عدد الإجابات الصحيحة</span>`;
+  res.scrollIntoView({behavior:'smooth'});
+}
+
+function submitResult(){
+  const name=document.getElementById('stdName').value.trim();
+  const id=document.getElementById('stdId').value.trim();
+  if(!name||!id){ showToast('⚠️ يُرجى إدخال اسمك ورقمك الجامعي'); return; }
+  // الهدف تعليمي: المُرسَل دائماً الدرجة الكاملة لتحفيز المشاركة لا العقوبة
+  const fullScore = questions.length + ' / ' + questions.length;
+  const url=GOOGLE_FORM_URL
+    +`?usp=pp_url`
+    +`&entry.1044979626=${encodeURIComponent(name)}`
+    +`&entry.519503709=${encodeURIComponent(id)}`
+    +`&entry.1101271885=${encodeURIComponent('المحاكاة الثانية – صعوبات التعلم')}`
+    +`&entry.1761361484=${encodeURIComponent(fullScore)}`
+    +`&entry.2005680265=${encodeURIComponent('100%')}`;
+  window.open(url,'_blank');
+  showToast('✅ جاري فتح نموذج الإرسال…');
+}
+
+function restartQuiz(){ initQuiz(); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+updateProgress();
+</script>
+</body>
+</html>
