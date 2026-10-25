@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>اختبار قبلي/بعدي — SPED 100</title>
+<style>
+  :root {
+    --primary: #4A1B6B;
+    --primary-dark: #321248;
+    --primary-light: #6B3A8C;
+    --accent: #C8A951;
+    --accent-light: #E8C96A;
+    --bg: #F5F0FA;
+    --card: #FFFFFF;
+    --text: #1A1A2E;
+    --text-muted: #5A5A7A;
+    --border: #D4C5E8;
+    --correct: #1A6B3A;
+    --correct-bg: #E8F5ED;
+    --wrong: #8B1A1A;
+    --wrong-bg: #FCEAEA;
+    --neutral: #4A1B6B;
+    --neutral-bg: #F0EAF7;
+    --shadow: rgba(74,27,107,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, #F5F0FA 0%, #EDE5F5 100%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .container { max-width: 700px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    padding: 24px 20px 20px;
+    border-radius: 16px 16px 0 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -30px; left: -30px;
+    width: 140px; height: 140px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; right: -20px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+  .kau-logo { font-size: 2rem; margin-bottom: 6px; }
+  .header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; position: relative; z-index: 1; }
+  .header p { font-size: 0.9rem; opacity: 0.85; position: relative; z-index: 1; }
+  .header .badge {
+    display: inline-block;
+    background: rgba(200,169,81,0.3);
+    border: 1px solid var(--accent);
+    color: var(--accent-light);
+    font-size: 0.75rem;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-top: 8px;
+    position: relative; z-index: 1;
+  }
+
+  /* Progress Bar */
+  .progress-wrap {
+    background: var(--primary-dark);
+    padding: 10px 20px;
+  }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255,255,255,0.8);
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* Body Sections */
+  .body-wrap {
+    background: var(--card);
+    border-radius: 0 0 16px 16px;
+    box-shadow: 0 4px 20px var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Info Screen */
+  .screen { display: none; padding: 28px 20px; }
+  .screen.active { display: block; }
+
+  .info-icon { font-size: 3rem; text-align: center; margin-bottom: 12px; }
+  .info-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .info-list {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 16px;
+    list-style: none;
+    margin-bottom: 20px;
+  }
+  .info-list li {
+    padding: 6px 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .info-list li:last-child { border-bottom: none; }
+  .info-list li span { color: var(--accent); font-size: 1rem; margin-top: 2px; }
+
+  /* Form Fields */
+  .field-group { margin-bottom: 16px; }
+  .field-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 6px;
+  }
+  .field-group input, .field-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s;
+    direction: rtl;
+  }
+  .field-group input:focus, .field-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+  }
+  .field-group select { cursor: pointer; }
+
+  /* Test Type Selector */
+  .type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .type-btn {
+    padding: 14px 10px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .type-btn:hover { border-color: var(--primary-light); background: var(--neutral-bg); }
+  .type-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+  }
+  .type-btn .type-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+  .type-btn .type-label { font-size: 0.9rem; font-weight: 600; }
+  .type-btn .type-desc { font-size: 0.75rem; opacity: 0.7; margin-top: 2px; }
+  .type-btn.selected .type-desc { opacity: 0.85; }
+
+  /* Quiz Screen */
+  .q-number {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .q-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--neutral-bg);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border-right: 4px solid var(--primary);
+    line-height: 1.7;
+  }
+  .options { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    text-align: right;
+  }
+  .opt:hover:not(.disabled) { border-color: var(--primary-light); background: var(--neutral-bg); }
+  .opt.disabled { cursor: default; }
+  .opt.correct { border-color: var(--correct); background: var(--correct-bg); }
+  .opt.wrong { border-color: var(--wrong); background: var(--wrong-bg); }
+  .opt-letter {
+    min-width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    color: var(--primary);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .opt.correct .opt-letter { background: var(--correct); border-color: var(--correct); color: white; }
+  .opt.wrong .opt-letter { background: var(--wrong); border-color: var(--wrong); color: white; }
+  .opt-text { font-size: 0.9rem; line-height: 1.5; flex: 1; }
+  .opt-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+    align-self: center;
+  }
+  .opt.correct .opt-badge { background: var(--correct); color: white; }
+  .opt.wrong .opt-badge { background: var(--wrong); color: white; }
+
+  /* Explanation */
+  .explanation {
+    display: none;
+    margin-top: 14px;
+    padding: 14px;
+    background: var(--neutral-bg);
+    border-radius: 10px;
+    border-right: 4px solid var(--primary);
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--primary); }
+
+  /* Navigation */
+  .nav { display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; align-items: center; }
+  .nav-info { font-size: 0.8rem; color: var(--text-muted); }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 3px 12px rgba(74,27,107,0.3);
+  }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 2px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--primary-light); color: var(--primary); }
+  .btn-accent {
+    background: var(--accent);
+    color: var(--primary-dark);
+    box-shadow: 0 3px 12px rgba(200,169,81,0.3);
+  }
+  .btn-accent:hover { background: var(--accent-light); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* Result Screen */
+  .result-header {
+    text-align: center;
+    padding: 24px 20px 16px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+  }
+  .result-emoji { font-size: 3.5rem; margin-bottom: 8px; }
+  .result-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .result-subtitle { font-size: 0.85rem; opacity: 0.8; }
+  .score-circle {
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 4px solid rgba(200,169,81,0.6);
+    flex-direction: column;
+    margin-top: 16px;
+  }
+  .score-num { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+  .score-total { font-size: 0.85rem; opacity: 0.8; }
+
+  .result-body { padding: 20px; }
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-num { font-size: 1.4rem; font-weight: 700; color: var(--primary); }
+  .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+  .result-msg {
+    background: var(--neutral-bg);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  .result-actions { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--primary-dark);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    text-align: center;
+    max-width: 90vw;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="kau-logo">🎓</div>
+    <h1>اختبار معرفي — SPED 100</h1>
+    <p>حقوق ومسؤوليات الأشخاص ذوي الإعاقة</p>
+    <span class="badge">جامعة الملك عبدالعزيز</span>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="progressText">البدء</span>
+      <span id="progressCount">0 / 15</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="body-wrap">
+
+    <!-- Screen 1: Info & Form -->
+    <div class="screen active" id="screenInfo">
+      <div class="info-icon">📋</div>
+      <div class="info-title">معلومات الاختبار</div>
+      <ul class="info-list">
+        <li><span>📌</span> الاختبار يشمل 15 سؤالاً متعدد الخيارات</li>
+        <li><span>⏱️</span> لا يوجد وقت محدد — تأمّل كل سؤال بهدوء</li>
+        <li><span>💡</span> يُقدَّم في بداية الفصل (قبلي) ونهايته (بعدي)</li>
+        <li><span>📊</span> يُستخدم لقياس نمو معرفتك خلال الفصل</li>
+        <li><span>🔒</span> إجاباتك سرية ولا تُؤثر على درجاتك</li>
+      </ul>
+
+      <div class="field-group">
+        <label>نوع الاختبار *</label>
+        <div class="type-selector">
+          <button class="type-btn" id="btnPre" onclick="selectType('قبلي')">
+            <span class="type-icon">🌅</span>
+            <div class="type-label">قبلي</div>
+            <div class="type-desc">بداية الفصل</div>
+          </button>
+          <button class="type-btn" id="btnPost" onclick="selectType('بعدي')">
+            <span class="type-icon">🌟</span>
+            <div class="type-label">بعدي</div>
+            <div class="type-desc">نهاية الفصل</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="stdName">الاسم الكامل *</label>
+        <input type="text" id="stdName" placeholder="اكتب اسمك الرباعي هنا">
+      </div>
+      <div class="field-group">
+        <label for="stdId">الرقم الجامعي *</label>
+        <input type="text" id="stdId" placeholder="أدخل رقمك الجامعي" inputmode="numeric">
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="startQuiz()">
+        ابدأ الاختبار ←
+      </button>
+    </div>
+
+    <!-- Screen 2: Quiz -->
+    <div class="screen" id="screenQuiz">
+      <div class="q-number" id="qNumber">سؤال 1 من 15</div>
+      <div class="q-text" id="qText"></div>
+      <ul class="options" id="optionsList"></ul>
+      <div class="explanation" id="explanation"></div>
+      <div class="nav">
+        <button class="btn btn-secondary" id="btnPrev" onclick="prevQ()">→ السابق</button>
+        <span class="nav-info" id="navInfo"></span>
+        <button class="btn btn-primary" id="btnNext" onclick="nextQ()">التالي ←</button>
+      </div>
+    </div>
+
+    <!-- Screen 3: Results -->
+    <div class="screen" id="screenResult">
+      <div class="result-header">
+        <div class="result-emoji" id="resultEmoji">🎉</div>
+        <div class="result-title" id="resultTitle">أحسنت!</div>
+        <div class="result-subtitle" id="resultSubtitle"></div>
+        <div class="score-circle">
+          <div class="score-num" id="scoreNum">-</div>
+          <div class="score-total">من 15</div>
+        </div>
+      </div>
+      <div class="result-body">
+        <div class="result-stats">
+          <div class="stat-card">
+            <div class="stat-num" id="statCorrect" style="color:var(--correct)">-</div>
+            <div class="stat-label">✅ صحيح</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statWrong" style="color:var(--wrong)">-</div>
+            <div class="stat-label">❌ خطأ</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statPct" style="color:var(--primary)">-</div>
+            <div class="stat-label">📊 النسبة</div>
+          </div>
+        </div>
+        <div class="result-msg" id="resultMsg"></div>
+        <div class="result-actions">
+          <button class="btn btn-accent" style="width:100%;" onclick="submitResult()">
+            📤 إرسال النتيجة إلى قوقل فورم
+          </button>
+          <button class="btn btn-secondary" style="width:100%;" onclick="reviewAnswers()">
+            🔍 مراجعة الإجابات
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── Google Form ──────────────────────────────────────────────────────────────
+// ملاحظة: أضف قسماً جديداً للاختبار القبلي/البعدي في نفس النموذج
+// وضع Entry IDs الخاصة بالحقول الجديدة أدناه
+const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSc9521N4_q_M1Gdp_U3XX6-zkpdDHQ7CdSQ4CtJp3__1eP9mg/viewform';
+
+// ⚠️ استبدل هذه القيم بـ Entry IDs الحقيقية بعد إضافة الحقول لنموذجك
+// الحقول الحالية في النموذج:
+const ENTRY_NAME      = 'entry.1044979626'; // الاسم (موجود)
+const ENTRY_ID        = 'entry.519503709';  // الرقم الجامعي (موجود)
+const ENTRY_SIM_NAME  = 'entry.1101271885'; // نوع النشاط (موجود - سنُعيد استخدامه)
+const ENTRY_SCORE     = 'entry.1761361484'; // الدرجة (موجود)
+const ENTRY_PERCENT   = 'entry.2005680265'; // النسبة (موجود)
+// ─── إذا أضفت حقلاً منفصلاً لنوع الاختبار، ضع entry ID هنا:
+// const ENTRY_TEST_TYPE = 'entry.XXXXXXXXX';
+
+// ─── Questions ────────────────────────────────────────────────────────────────
+const questions = [
+  {
+    q: 'تُشير الأبحاث الحديثة إلى أن الإعاقة ليست مجرد مشكلة طبية في الجسم، بل هي نتيجة لتفاعل عوامل عدة. أي العبارات التالية تعبّر عن هذه النظرة الحديثة؟',
+    opts: [
+      'الإعاقة قصور جسدي أو ذهني دائم لا علاج له',
+      'الإعاقة تنشأ من التفاعل بين حالة الشخص الصحية والبيئة المحيطة به والعوامل الشخصية',
+      'الإعاقة ناجمة عن عوامل وراثية فقط لا يمكن تجنبها',
+      'الإعاقة تعني عدم قدرة الشخص على العمل أو المشاركة في الحياة اليومية'
+    ],
+    correct: 1,
+    explain: 'النظرة الحديثة (التي تبنّتها منظمة الصحة العالمية) ترى أن الإعاقة ليست في الشخص وحده، بل تتشكّل من تفاعل: الحالة الصحية + البيئة المحيطة + العوامل الشخصية. فنفس الحالة قد تكون إعاقة في بيئة غير داعمة، وغير إعاقة في بيئة داعمة.'
+  },
+  {
+    q: 'أي مما يلي يُصنَّف ضمن الأسباب التي تحدث بعد الولادة؟',
+    opts: [
+      'الحصبة الألمانية لدى الأم أثناء الحمل',
+      'التشابك الحبلي أثناء الولادة',
+      'إصابات الرأس والحوادث',
+      'نقص حمض الفوليك قبل الحمل'
+    ],
+    correct: 2,
+    explain: 'تُقسَّم أسباب الإعاقة إلى: ما قبل الولادة (وراثية أو خلال الحمل)، وما حول الولادة (أثناء الوضع)، وما بعد الولادة (حوادث، أمراض، مضاعفات لاحقة). إصابات الرأس والحوادث تقع بعد الولادة.'
+  },
+  {
+    q: 'طفل ذكاؤه طبيعي وحواسه سليمة، لكنه يجد صعوبة كبيرة في القراءة والكتابة فقط. إلى أي فئة ينتمي؟',
+    opts: [
+      'الإعاقة الذهنية',
+      'صعوبات التعلم',
+      'اضطرابات التواصل',
+      'الإعاقة البصرية'
+    ],
+    correct: 1,
+    explain: 'صعوبات التعلم تعني: ذكاء طبيعي أو فوق المتوسط + صعوبة محددة في مهارة أكاديمية كالقراءة أو الكتابة أو الحساب، دون أن يكون السبب إعاقة حسية أو ذهنية.'
+  },
+  {
+    q: 'طفل وُلد أصمّ تماماً ولم يتعرض للغة المنطوقة — ما أبرز تأثير ذلك على نموه؟',
+    opts: [
+      'تأخر في النمو الحركي فقط',
+      'صعوبة في الرؤية والإدراك البصري',
+      'تأخر في اكتساب اللغة والكلام',
+      'ضعف في حاسة اللمس والتوازن'
+    ],
+    correct: 2,
+    explain: 'الطفل يتعلم الكلام والغة عبر السمع. الطفل الأصم منذ الولادة لا يتعرض للغة المنطوقة بشكل طبيعي، مما يؤثر مباشرة على اكتساب الكلام واللغة.'
+  },
+  {
+    q: 'كيف يتعامل الإسلام مع قضية الأشخاص ذوي الإعاقة في المجتمع؟',
+    opts: [
+      'يُعفيهم من جميع الواجبات الدينية والاجتماعية',
+      'يؤكد على كرامتهم الإنسانية وحقهم في الاندماج والتكافل المجتمعي',
+      'يُلزم الدولة بإيوائهم في مؤسسات متخصصة منفصلة',
+      'يمنحهم صلاحيات إضافية غير مشروطة'
+    ],
+    correct: 1,
+    explain: 'الإسلام يُرسّخ مبدأين جوهريين: الكرامة الإنسانية لجميع البشر (لقد كرّمنا بني آدم) والتكافل الاجتماعي (مثل المؤمنين في توادّهم...). هذان المبدآن يدعوان للاندماج والرعاية المجتمعية، لا للعزل.'
+  },
+  {
+    q: 'صدرت في عام 2006 اتفاقية دولية خاصة بحقوق الأشخاص ذوي الإعاقة. أي العبارات التالية تتعارض مع مبادئ هذه الاتفاقية؟',
+    opts: [
+      'احترام كرامة الشخص ذي الإعاقة واستقلاليته',
+      'عدم التمييز ضده وضمان مشاركته في المجتمع',
+      'توفير فرص متكافئة وإمكانية وصول للجميع',
+      'إلزامهم بالعيش في مرافق متخصصة بعيداً عن المجتمع'
+    ],
+    correct: 3,
+    explain: 'اتفاقية الأمم المتحدة لحقوق الأشخاص ذوي الإعاقة (CRPD 2006) تنصّ على حقهم في العيش باستقلالية ضمن مجتمعاتهم، وتعارض العزل المؤسسي. إيداعهم في مرافق منفصلة يتناقض تماماً مع روح الاتفاقية.'
+  },
+  {
+    q: 'أصدرت المملكة العربية السعودية وثيقة حقوق الأشخاص ذوي الإعاقة — ماذا شملت هذه الوثيقة؟',
+    opts: [
+      'حقوقاً شاملة تشمل التعليم والعمل والصحة والمشاركة الاجتماعية',
+      'الرعاية الطبية للإعاقات الحركية والحسية فقط',
+      'تحديد حدود للدعم المقدّم حسب نوع الإعاقة',
+      'إسناد رعايتهم بالكامل للجمعيات الأهلية'
+    ],
+    correct: 0,
+    explain: 'الوثيقة السعودية جاءت شاملة وتضمنت حقوقاً متعددة: صحية وتعليمية وتدريبية وتوظيفية واجتماعية وترفيهية — بما يتوافق مع التزامات المملكة الدولية ورؤية 2030 التي تُركّز على الشمول.'
+  },
+  {
+    q: 'ما المقصود بـ"التعليم الدامج" وفق مواثيق حقوق ذوي الإعاقة؟',
+    opts: [
+      'تدريس الطلاب ذوي الإعاقة في فصول مستقلة مع معلمين متخصصين فقط',
+      'تعليمهم في أنسب بيئة ممكنة جنباً إلى جنب مع أقرانهم مع تقديم الدعم اللازم',
+      'وضع جميع الطلاب في نفس الفصل دون أي دعم أو تعديل',
+      'تعليمهم عن بُعد فقط حفاظاً على راحتهم'
+    ],
+    correct: 1,
+    explain: 'التعليم الدامج يعني تعليم كل طالب في "البيئة الأقل تقييداً" التي تناسب احتياجاته مع تقديم الدعم اللازم — لا إلغاء الدعم، ولا الفصل الكامل. الهدف هو التعلم مع الأقران قدر الإمكان.'
+  },
+  {
+    q: 'ما الدور الإيجابي الذي ينبغي أن يؤديه الأشخاص ذوو الإعاقة في مجتمعهم؟',
+    opts: [
+      'قبول دور المستفيد السلبي من خدمات المجتمع فقط',
+      'تجنب المطالبة بحقوقهم حتى لا يُزعجوا الآخرين',
+      'المشاركة في التوعية بحقوقهم وتقديم نموذج إيجابي ناجح للمجتمع',
+      'الاعتماد الكلي على ذويهم في جميع قراراتهم'
+    ],
+    correct: 2,
+    explain: 'ذوو الإعاقة شركاء في المجتمع لا مجرد مستفيدين. دورهم يشمل: التوعية بحقوقهم، والمشاركة الفاعلة، وتقديم نماذج ناجحة تُغيّر الصورة النمطية السلبية، والتعاون مع المؤسسات لتطوير الخدمات.'
+  },
+  {
+    q: 'تريد التحدث مع شخص يستخدم كرسياً متحركاً — ما الأسلوب الصحيح؟',
+    opts: [
+      'الانحناء نحوه والتحدث بصوت مرتفع لأنه قد لا يسمع جيداً',
+      'توجيه حديثك لمرافقه حرصاً على مشاعره',
+      'التحدث إليه مباشرة بصوت طبيعي والجلوس إن طال الحديث ليكون على مستوى نظره',
+      'تجنب الحديث عن أي موضوع يتعلق بحالته'
+    ],
+    correct: 2,
+    explain: 'الكرسي المتحرك يؤثر على الحركة فقط — لا على السمع ولا القدرة على التفكير والتواصل. الأسلوب الصحيح: تواصل مباشر بصوت طبيعي، واجلس إن أطال الحديث لتكون على مستوى نظره.'
+  },
+  {
+    q: 'تتحدث مع شخص أصم يستخدم مترجم لغة إشارة — كيف تتصرف؟',
+    opts: [
+      'ترفع صوتك لعله يسمع شيئاً',
+      'توجّه حديثك ونظرك للشخص الأصم نفسه، لا للمترجم',
+      'تكتب له فقط وتتجنب الكلام',
+      'تتحدث مع المترجم وحده ليُبلّغه'
+    ],
+    correct: 1,
+    explain: 'المترجم وسيلة لا محاور. توجيه نظرك وحديثك للشخص الأصم يحترم كرامته ويُبقيه محور الحوار. رفع الصوت لا معنى له لمن لا يسمع.'
+  },
+  {
+    q: 'طالب يعاني من عسر القراءة (يجد صعوبة في القراءة رغم ذكائه الطبيعي) — ما الدعم الأنسب له؟',
+    opts: [
+      'إعفاؤه من القراءة وإعطاؤه درجات أعلى تعويضاً',
+      'تحويله فوراً لفصل التربية الخاصة',
+      'منحه وقتاً إضافياً في الاختبارات واحترام وتيرته دون إبراز اختلافه أمام الآخرين',
+      'تشجيعه على القراءة أكثر دون أي تعديل في طريقة التقييم'
+    ],
+    correct: 2,
+    explain: 'عسر القراءة لا يعني ضعف الذكاء. المطلوب: تعديلات معقولة في التقييم (وقت إضافي، اختبارات شفهية) دون إحراج الطالب أو تمييزه سلباً أمام زملائه.'
+  },
+  {
+    q: 'عند التواصل مع شخص من ذوي اضطراب طيف التوحد، ما الذي ينبغي أن تتذكره؟',
+    opts: [
+      'تجنب النظر إليه كلياً لأن ذلك يسبب له ضيقاً دائماً',
+      'تحدّث معه بلغة بسيطة جداً لأن قدراته العقلية محدودة',
+      'تحدّث معه بوضوح ومباشرة وتجنب التعبيرات المجازية غير الحرفية',
+      'تجنب دعوته لأي نشاط اجتماعي لأن التوحد يعني العزلة الكاملة'
+    ],
+    correct: 2,
+    explain: 'التوحد "طيف" واسع جداً — ليس كل ذوي التوحد يتجنبون التواصل البصري أو لديهم ضعف معرفي. الخاصية الشائعة هي صعوبة فهم التعبيرات المجازية والكنايات، لذا يُنصح بالوضوح والمباشرة.'
+  },
+  {
+    q: 'ما معنى "التصميم الشامل" عند تصميم المباني والفضاءات العامة؟',
+    opts: [
+      'إنشاء مداخل ومرافق منفصلة خاصة بذوي الإعاقة',
+      'تصميم المكان من البداية ليكون قابلاً للاستخدام من الجميع دون الحاجة لتعديلات خاصة',
+      'توفير معدات مساعدة لذوي الإعاقة عند الطلب',
+      'إضافة مرافق خاصة بجوار المرافق العادية'
+    ],
+    correct: 1,
+    explain: 'التصميم الشامل يختلف جوهرياً عن إضافة "بدائل خاصة لاحقاً" — فهو يصمّم المكان أصلاً ليخدم الجميع: منحدرات بدل الدرجات فقط، مصاعد واسعة، إشارات بصرية وصوتية.'
+  },
+  {
+    q: 'ما أكثر الطرق فاعلية لتغيير المواقف السلبية تجاه الأشخاص ذوي الإعاقة في المجتمع؟',
+    opts: [
+      'إصدار قوانين صارمة تُعاقب من يُميّز ضدهم',
+      'عزلهم في بيئات آمنة بعيداً عن مواقف الإحراج',
+      'التفاعل المباشر والمتكرر بين ذوي الإعاقة والمجتمع من خلال أنشطة مشتركة',
+      'الاكتفاء بحملات إعلامية سنوية في اليوم العالمي للإعاقة'
+    ],
+    correct: 2,
+    explain: 'تُثبت الأبحاث أن التفاعل المباشر والمتكرر ("نظرية التواصل") هو الأكثر فاعلية في تغيير المواقف: يُقلل الخوف والصور النمطية ويُنمّي الاحترام المتبادل. القوانين والحملات الإعلامية وحدها غير كافية دون تفاعل حقيقي.'
+  }
+];
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let currentQ = 0;
+let answers = new Array(questions.length).fill(null);
+let testType = '';
+let studentName = '';
+let studentId = '';
+
+// ─── Functions ────────────────────────────────────────────────────────────────
+function selectType(type) {
+  testType = type;
+  document.getElementById('btnPre').classList.toggle('selected', type === 'قبلي');
+  document.getElementById('btnPost').classList.toggle('selected', type === 'بعدي');
+}
+
+function showToast(msg, duration=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function startQuiz() {
+  studentName = document.getElementById('stdName').value.trim();
+  studentId = document.getElementById('stdId').value.trim();
+  if (!testType) { showToast('⚠️ يُرجى اختيار نوع الاختبار (قبلي / بعدي)'); return; }
+  if (!studentName) { showToast('⚠️ يُرجى إدخال اسمك الكامل'); return; }
+  if (!studentId) { showToast('⚠️ يُرجى إدخال رقمك الجامعي'); return; }
+  showScreen('screenQuiz');
+  renderQuestion();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  const pct = (answered / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressCount').textContent = answered + ' / ' + questions.length;
+  document.getElementById('progressText').textContent = answered === questions.length ? 'اكتمل ✓' : 'جارٍ…';
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const letters = ['أ', 'ب', 'ج', 'د'];
+  document.getElementById('qNumber').textContent = 'سؤال ' + (currentQ+1) + ' من ' + questions.length;
+  document.getElementById('qText').textContent = q.q;
+
+  const list = document.getElementById('optionsList');
+  list.innerHTML = '';
+  const answered = answers[currentQ] !== null;
+
+  q.opts.forEach((opt, i) => {
+    const li = document.createElement('li');
+    li.className = 'opt' + (answered ? ' disabled' : '');
+    if (answered) {
+      if (i === q.correct) li.classList.add('correct');
+      else if (i === answers[currentQ]) li.classList.add('wrong');
+    }
+    const badge = answered ? (i === q.correct ? '<span class="opt-badge">✓ صحيح</span>' : (i === answers[currentQ] ? '<span class="opt-badge">✗ خطأ</span>' : '')) : '';
+    li.innerHTML = `<div class="opt-letter">${letters[i]}</div><div class="opt-text">${opt}</div>${badge}`;
+    if (!answered) li.onclick = () => selectAnswer(i);
+    list.appendChild(li);
+  });
+
+  const exp = document.getElementById('explanation');
+  if (answered) {
+    exp.innerHTML = '<strong>💡 التفسير:</strong> ' + q.explain;
+    exp.classList.add('show');
+  } else {
+    exp.classList.remove('show');
+  }
+
+  // Nav buttons
+  document.getElementById('btnPrev').style.visibility = currentQ === 0 ? 'hidden' : 'visible';
+  const isLast = currentQ === questions.length - 1;
+  const nextBtn = document.getElementById('btnNext');
+  if (isLast && answers.filter(a => a !== null).length === questions.length) {
+    nextBtn.textContent = 'عرض النتيجة 🏁';
+    nextBtn.onclick = showResult;
+  } else if (isLast) {
+    nextBtn.textContent = 'عرض النتيجة 🏁';
+    nextBtn.onclick = showResult;
+    nextBtn.disabled = false;
+  } else {
+    nextBtn.textContent = 'التالي ←';
+    nextBtn.onclick = nextQ;
+    nextBtn.disabled = false;
+  }
+
+  const unanswered = answers.filter(a => a === null).length;
+  document.getElementById('navInfo').textContent = unanswered > 0 ? unanswered + ' لم يُجب' : '✓ مكتمل';
+  updateProgress();
+}
+
+function selectAnswer(i) {
+  if (answers[currentQ] !== null) return;
+  answers[currentQ] = i;
+  renderQuestion();
+}
+
+function nextQ() {
+  if (currentQ < questions.length - 1) { currentQ++; renderQuestion(); }
+}
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQuestion(); }
+}
+
+function reviewAnswers() {
+  currentQ = 0;
+  showScreen('screenQuiz');
+  renderQuestion();
+}
+
+function showResult() {
+  const correct = answers.reduce((sum, a, i) => sum + (a === questions[i].correct ? 1 : 0), 0);
+  const wrong = questions.length - correct;
+  const pct = Math.round((correct / questions.length) * 100);
+
+  document.getElementById('scoreNum').textContent = correct;
+  document.getElementById('statCorrect').textContent = correct;
+  document.getElementById('statWrong').textContent = wrong;
+  document.getElementById('statPct').textContent = pct + '%';
+
+  let emoji, title, msg;
+  if (pct >= 80) {
+    emoji = '🌟'; title = 'ممتاز!';
+    msg = 'أداء رائع! لديك قاعدة معرفية جيدة حول حقوق ومفاهيم الإعاقة.';
+  } else if (pct >= 60) {
+    emoji = '👍'; title = 'جيد!';
+    msg = 'إجابات جيدة! ستتعمق معرفتك أكثر خلال الفصل الدراسي.';
+  } else if (pct >= 40) {
+    emoji = '📚'; title = 'معقول';
+    msg = 'هذا الاختبار يساعدنا على معرفة نقطة البداية. ستتعلم الكثير خلال الفصل!';
+  } else {
+    emoji = '🌱'; title = 'بداية جديدة';
+    msg = 'لا بأس! هذا المقرر صُمِّم لتعلُّم هذه المفاهيم من الصفر. أنت في المكان الصحيح.';
+  }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultSubtitle').textContent = 'الاختبار ' + testType + ' — ' + studentName;
+  document.getElementById('resultMsg').textContent = msg;
+
+  updateProgress();
+  showScreen('screenResult');
+}
+
+function submitResult() {
+  if (!studentName || !studentId) { showToast('⚠️ معلومات الطالب غير مكتملة'); return; }
+  const correct = answers.reduce((sum, a, i) => sum + (a === questions[i].correct ? 1 : 0), 0);
+  const pct = Math.round((correct / questions.length) * 100);
+  const score = correct + ' / ' + questions.length;
+  const activityName = 'الاختبار ' + testType + ' — SPED 100';
+
+  // نرسل الدرجة الحقيقية (لأن الهدف قياسي/تشخيصي)
+  const url = GOOGLE_FORM_URL
+    + '?usp=pp_url'
+    + '&' + ENTRY_NAME    + '=' + encodeURIComponent(studentName)
+    + '&' + ENTRY_ID      + '=' + encodeURIComponent(studentId)
+    + '&' + ENTRY_SIM_NAME+ '=' + encodeURIComponent(activityName)
+    + '&' + ENTRY_SCORE   + '=' + encodeURIComponent(score)
+    + '&' + ENTRY_PERCENT + '=' + encodeURIComponent(pct + '%');
+
+  window.open(url, '_blank');
+  showToast('✅ جاري فتح نموذج الإرسال…');
+}
+</script>
+</body>
+</html>
