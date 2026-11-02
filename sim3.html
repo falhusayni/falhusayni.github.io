@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محاكاة تفاعلية – الإعاقة الفكرية | SPED 100</title>
+<style>
+  :root {
+    --primary: #5B3A8E;
+    --accent:  #C8A951;
+    --bg:      #f0ebf8;
+    --card:    #ffffff;
+    --text:    #2c3e50;
+    --muted:   #7f8c8d;
+    --border:  #dce1e7;
+    --correct: #d5f5e3;
+    --wrong:   #fde8e6;
+    --correct-border: #27ae60;
+    --wrong-border:   #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; direction: rtl; font-size: 17px; }
+
+  .header { background: linear-gradient(135deg, #5B3A8E 0%, #3d2460 100%); color: white; padding: 20px 16px 16px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  .header h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+  .header p  { font-size: .85rem; opacity: .85; }
+  .progress-wrap { background: rgba(255,255,255,.2); border-radius: 20px; height: 6px; margin-top: 10px; overflow: hidden; }
+  .progress-bar  { background: #f9e79f; height: 100%; border-radius: 20px; transition: width .4s ease; }
+  .progress-label { font-size: .7rem; opacity:.8; margin-top:4px; }
+
+  .section-nav { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); scrollbar-width: none; }
+  .section-nav::-webkit-scrollbar { display: none; }
+  .nav-pill { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--primary); background: transparent; color: var(--primary); font-size: .84rem; font-weight: 600; cursor: pointer; transition: all .2s; font-family: inherit; }
+  .nav-pill.active { background: var(--primary); color: white; }
+  .nav-pill.done { background: #e8e0f5; border-color: var(--primary); color: var(--primary); }
+  .nav-pill.done::after { content: " ✓"; }
+
+  .main { padding: 16px; max-width: 700px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: var(--card); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+  .sec-title { font-size: 1.05rem; font-weight: 800; color: var(--primary); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 3px solid #f9e79f; }
+
+  /* Scenario box */
+  .scenario-box { background: linear-gradient(135deg, #fdf6e3, #fdebd0); border: 2px solid #f39c12; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .scenario-box h3 { color: #7d6608; font-size: .95rem; margin-bottom: 10px; font-weight: 800; }
+  .scenario-box p  { font-size: .86rem; color: #6b5900; line-height: 1.8; }
+  .scenario-box .q-box { background: rgba(91,58,142,.12); border-right: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 10px 12px; margin-top: 12px; font-size: .86rem; color: var(--primary); font-weight: 700; }
+
+  /* Info cards */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .info-card { background: white; border-radius: 12px; border: 2px solid var(--border); padding: 14px 12px; }
+  .info-card .ic-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .info-card .ic-title { font-size: .84rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+  .info-card .ic-body  { font-size: .76rem; color: var(--muted); line-height: 1.6; }
+
+  /* Classification accordion */
+  .class-item { background: white; border: 2px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; cursor: pointer; transition: all .2s; }
+  .class-item:hover { border-color: var(--primary); }
+  .class-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+  .class-icon { font-size: 1.6rem; }
+  .class-label { font-size: .88rem; font-weight: 800; color: var(--text); flex: 1; }
+  .class-iq { font-size: .75rem; background: var(--bg); border-radius: 20px; padding: 3px 10px; color: var(--primary); font-weight: 700; }
+  .class-arrow { font-size: .8rem; color: var(--muted); transition: transform .2s; }
+  .class-body { display: none; padding: 0 14px 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+  .class-body p { font-size: .8rem; color: var(--text); line-height: 1.7; }
+  .class-body ul { margin-right: 18px; margin-top: 6px; }
+  .class-body li { font-size: .78rem; color: var(--muted); line-height: 1.7; }
+  .class-item.open { border-color: var(--primary); background: #f5f0fc; }
+  .class-item.open .class-arrow { transform: rotate(90deg); }
+  .class-item.open .class-body { display: block; }
+  .class-item.open .class-label { color: var(--primary); }
+
+  /* Matching game */
+  .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .match-col-title { font-size: .78rem; font-weight: 800; color: var(--muted); text-align: center; margin-bottom: 4px; }
+  .match-col { display: flex; flex-direction: column; gap: 6px; }
+  .match-item { padding: 10px 12px; border-radius: 10px; border: 2px solid var(--border); background: white; font-size: .8rem; cursor: pointer; transition: all .2s; text-align: center; line-height: 1.4; user-select: none; }
+  .match-item:hover { border-color: var(--primary); }
+  .match-item.selected { border-color: var(--primary); background: #ece5f8; color: var(--primary); font-weight: 700; }
+  .match-item.matched  { border-color: var(--correct-border); background: var(--correct); color: #1a5b36; cursor: default; }
+  .match-item.wrong-flash { border-color: var(--wrong-border); background: var(--wrong); }
+  .match-score { text-align: center; font-size: .84rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+
+  /* Do/Don't */
+  .do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .do-list  { background: #eafaf1; border-radius: 12px; padding: 14px; border: 1px solid #27ae60; }
+  .dont-list{ background: #fde8e6; border-radius: 12px; padding: 14px; border: 1px solid #e74c3c; }
+  .do-list h4   { color: #1a5b36; font-size: .82rem; margin-bottom: 8px; }
+  .dont-list h4 { color: #8b1a1a; font-size: .82rem; margin-bottom: 8px; }
+  .do-list li, .dont-list li { font-size: .77rem; margin-right: 14px; line-height: 1.7; color: var(--text); }
+
+  /* Quiz */
+  .q-num  { font-size: .82rem; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+  .q-text { font-size: 1.02rem; font-weight: 700; line-height: 1.6; margin-bottom: 14px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-btn { width: 100%; text-align: right; padding: 13px 15px; border-radius: 10px; border: 2px solid var(--border); background: white; color: var(--text); font-size: .95rem; cursor: pointer; transition: all .2s; font-family: inherit; line-height: 1.5; }
+  .opt-btn:hover:not(:disabled) { border-color: var(--primary); background: #ece5f8; }
+  .opt-btn.correct { border-color: var(--correct-border); background: var(--correct); color: #1a5b36; }
+  .opt-btn.wrong   { border-color: var(--wrong-border);   background: var(--wrong);   color: #8b1a1a; }
+  .opt-btn:disabled { cursor: default; }
+  .feedback { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: .91rem; line-height: 1.7; display: none; }
+  .feedback.show { display: block; }
+  .feedback.ok  { background: var(--correct); border: 1px solid var(--correct-border); color: #1a5b36; }
+  .feedback.bad { background: var(--wrong);   border: 1px solid var(--wrong-border);   color: #8b1a1a; }
+
+  /* Nav buttons */
+  .nav-btns { display: flex; gap: 10px; margin-top: 16px; }
+  .btn { flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: .95rem; font-weight: 700; cursor: pointer; transition: all .2s; font-family: inherit; }
+  .btn-primary   { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #3d2460; }
+  .btn-secondary { background: white; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-secondary:hover { background: #ece5f8; }
+  .btn-success   { background: #27ae60; color: white; }
+  .btn-success:hover { background: #1e8449; }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* Result */
+  .result-screen { text-align: center; padding: 30px 20px; }
+  .result-trophy { font-size: 4rem; margin-bottom: 10px; }
+  .result-score  { font-size: 2.5rem; font-weight: 900; color: var(--primary); }
+  .result-msg    { font-size: 1rem; color: var(--muted); margin-top: 6px; line-height: 1.6; }
+  .score-bar-wrap { background: var(--border); border-radius: 20px; height: 10px; margin: 16px 0; overflow: hidden; }
+  .score-bar { background: var(--accent); height: 100%; border-radius: 20px; transition: width 1s ease; }
+  .result-list { text-align: right; margin-top: 18px; }
+  .result-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-size: .84rem; }
+  .result-item.ok  { background: var(--correct); }
+  .result-item.bad { background: var(--wrong); }
+
+  .submit-panel { background: linear-gradient(135deg, #5B3A8E, #3d2460); color: white; border-radius: 16px; padding: 20px; margin-top: 18px; text-align: center; }
+  .submit-panel h3 { font-size: 1.06rem; margin-bottom: 8px; }
+  .submit-panel p  { font-size: .88rem; opacity:.88; margin-bottom:14px; line-height:1.6; }
+  .submit-info { background: rgba(255,255,255,.15); border-radius:10px; padding:10px 14px; font-size:.8rem; margin-bottom:12px; line-height:1.7; text-align:right; }
+  .submit-field { width:100%; padding:11px 14px; border-radius:10px; border:2px solid rgba(255,255,255,.3); background:rgba(255,255,255,.15); color:white; font-size:.95rem; font-family:inherit; margin-bottom:10px; outline:none; text-align:right; }
+  .submit-field::placeholder { color:rgba(255,255,255,.6); }
+  .submit-field:focus { border-color:rgba(255,255,255,.8); background:rgba(255,255,255,.22); }
+
+  .highlight { background: rgba(91,58,142,.1); border-right: 4px solid var(--primary); border-radius: 0 10px 10px 0; padding: 10px 12px; margin-bottom: 10px; font-size: .85rem; line-height: 1.7; }
+  .stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .stat-box { flex: 1; background: white; border-radius: 12px; border: 2px solid var(--border); padding: 12px; text-align: center; }
+  .stat-box .stat-num { font-size: 1.6rem; font-weight: 900; color: var(--primary); }
+  .stat-box .stat-lbl { font-size: .72rem; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧠 الإعاقة الفكرية</h1>
+  <p>SPED 100 — محاكاة تفاعلية</p>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+  <div class="progress-label" id="progressLabel">ابدأ من القسم الأول</div>
+</div>
+
+<div class="section-nav" id="sectionNav">
+  <button class="nav-pill active" onclick="goSection(0)">📖 التعريف</button>
+  <button class="nav-pill" onclick="goSection(1)">📊 الانتشار</button>
+  <button class="nav-pill" onclick="goSection(2)">🗂️ التصنيف</button>
+  <button class="nav-pill" onclick="goSection(3)">🔍 التشخيص</button>
+  <button class="nav-pill" onclick="goSection(4)">🤝 التعامل</button>
+  <button class="nav-pill" onclick="goSection(5)">✅ الاختبار</button>
+</div>
+
+<div class="main">
+
+  <!-- SECTION 0: التعريف -->
+  <div class="section active" id="sec0">
+    <div class="scenario-box">
+      <h3>🎯 سيناريو</h3>
+      <p>أنتَ معلم في مدرسة ابتدائية. لاحظت أن أحد طلابك يُتقن المهارات الحياتية كالنظافة والأكل باستقلالية، لكنه يواجه صعوبة كبيرة في القراءة والكتابة والحساب، ودرجة ذكائه بين 50 و55.</p>
+      <div class="q-box">💭 هل يُعدّ هذا الطالب من ذوي الإعاقة الفكرية؟ تعرّف أولاً على التعريف الدقيق لتُجيب.</div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">📖 ما هي الإعاقة الفكرية؟</div>
+      <div class="highlight">
+        الإعاقة الفكرية حالة يظهر فيها <strong>قصور واضح في القدرات العقلية العامة</strong> (كالتفكير والتعلم وحل المشكلات)، بحيث تكون درجة الذكاء <strong>أقل من 70 درجة تقريبًا</strong>، وتظهر <strong>قبل سن الثامنة عشرة</strong>.
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="ic-icon">🧮</div>
+          <div class="ic-title">القدرات العقلية</div>
+          <div class="ic-body">قصور في التفكير، التعلم، وحل المشكلات، يُقاس بمقاييس الذكاء الموحدة (أقل من 70)</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🌱</div>
+          <div class="ic-title">السن والظهور</div>
+          <div class="ic-body">تظهر الإعاقة خلال مرحلة النمو، أي قبل بلوغ الطفل 18 سنة</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🤝</div>
+          <div class="ic-title">السلوك التكيّفي</div>
+          <div class="ic-body">صعوبات في التواصل، الاستقلالية، المهارات الاجتماعية، والمهارات المهنية</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">⚠️</div>
+          <div class="ic-title">ثلاثة معايير مجتمعة</div>
+          <div class="ic-body">لا يكفي معيار واحد — يجب توافر القصور العقلي + السلوكي + مبكراً قبل 18</div>
+        </div>
+      </div>
+      <div class="highlight" style="background:#fdf6e3; border-color:#f39c12;">
+        💡 <strong>إجابة السيناريو:</strong> نعم، هذا الطالب قد يُصنَّف ضمن الإعاقة الفكرية البسيطة — لكن التشخيص يتطلب فريقاً متخصصاً وتقييماً شاملاً.
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-primary" onclick="nextSection()">التالي: الانتشار ←</button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: الانتشار -->
+  <div class="section" id="sec1">
+    <div class="card">
+      <div class="sec-title">📊 انتشار الإعاقة الفكرية</div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num">1–3%</div><div class="stat-lbl">نسبة الانتشار في المجتمع</div></div>
+        <div class="stat-box"><div class="stat-num">70</div><div class="stat-lbl">حد الذكاء التشخيصي (IQ)</div></div>
+        <div class="stat-box"><div class="stat-num">18</div><div class="stat-lbl">الحد الأقصى لسن الظهور</div></div>
+      </div>
+      <p style="font-size:.84rem; color:var(--muted); line-height:1.7; margin-bottom:12px;">
+        الإعاقة الفكرية موجودة في جميع المجتمعات والثقافات والأزمنة. تتفاوت نسبتها بين المجتمعات بحسب:
+      </p>
+      <ul style="margin-right:20px; font-size:.83rem; color:var(--text); line-height:1.9;">
+        <li>مدى انتشار الأسباب الوراثية والبيئية</li>
+        <li>توافر برامج الوقاية والرعاية الصحية المبكرة</li>
+        <li>جودة الخدمات التعليمية والتأهيلية</li>
+        <li>المعيار المستخدم في تحديد درجة الإعاقة</li>
+      </ul>
+
+      <div class="highlight" style="margin-top:12px;">
+        ⚕️ <strong>أسباب الإعاقة الفكرية:</strong> وراثية (متلازمة داون، فينيل كيتونيوريا)، أثناء الحمل (كحوادث نقص الأكسجين)، أو بعد الولادة (الإصابات، الأمراض الحادة).
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="goSection(0)">← السابق</button>
+      <button class="btn btn-primary"   onclick="nextSection()">التالي: التصنيف ←</button>
+    </div>
+  </div>
+
+  <!-- SECTION 2: التصنيف -->
+  <div class="section" id="sec2">
+    <div class="card">
+      <div class="sec-title">🗂️ تصنيف الإعاقة الفكرية</div>
+      <p style="font-size:.84rem; color:var(--muted); line-height:1.7; margin-bottom:14px;">اضغط على كل فئة لمعرفة تفاصيلها وبرامجها المناسبة:</p>
+
+      <div class="class-item" onclick="toggleClass(this)">
+        <div class="class-head">
+          <span class="class-icon">🟢</span>
+          <span class="class-label">الإعاقة الفكرية البسيطة — القابلون للتعلم</span>
+          <span class="class-iq">IQ: 50–70</span>
+          <span class="class-arrow">▶</span>
+        </div>
+        <div class="class-body">
+          <p>يمتلك هؤلاء قدرة على اكتساب المهارات الأكاديمية الأساسية ويمكن دمجهم في التعليم العادي.</p>
+          <ul>
+            <li>خطط تربوية فردية تركّز على المهارات الأكاديمية الأساسية</li>
+            <li>تدريب على المهارات اللغوية والاجتماعية والتكيفية</li>
+            <li>الهدف: دمجهم في التعليم العادي أو سوق العمل البسيط</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="class-item" onclick="toggleClass(this)">
+        <div class="class-head">
+          <span class="class-icon">🟡</span>
+          <span class="class-label">الإعاقة الفكرية المتوسطة — القابلون للتدريب</span>
+          <span class="class-iq">IQ: 35–50</span>
+          <span class="class-arrow">▶</span>
+        </div>
+        <div class="class-body">
+          <p>يحتاجون إلى دعم مكثف، لكن يمكنهم تعلم مهارات حياتية ومهنية بسيطة.</p>
+          <ul>
+            <li>التدريب على المهارات الحياتية اليومية والمهنية البسيطة</li>
+            <li>برامج التأهيل المهني ومراكز التدريب المتخصصة</li>
+            <li>الهدف: الاعتماد النسبي على الذات وممارسة أعمال بسيطة</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="class-item" onclick="toggleClass(this)">
+        <div class="class-head">
+          <span class="class-icon">🟠</span>
+          <span class="class-label">الإعاقة الفكرية الشديدة</span>
+          <span class="class-iq">IQ: 20–35</span>
+          <span class="class-arrow">▶</span>
+        </div>
+        <div class="class-body">
+          <p>يحتاجون إلى رعاية مستمرة ودعم شامل في معظم جوانب الحياة.</p>
+          <ul>
+            <li>رعاية طبية واجتماعية مستمرة</li>
+            <li>تدريب بسيط على مهارات الحياة الأولية (الأكل، اللباس، النظافة)</li>
+            <li>الهدف: تحقيق الحد الأدنى من التكيف الشخصي والاجتماعي</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="class-item" onclick="toggleClass(this)">
+        <div class="class-head">
+          <span class="class-icon">🔴</span>
+          <span class="class-label">الإعاقة الفكرية الشديدة جداً — الاعتماديون كلياً</span>
+          <span class="class-iq">IQ: أقل من 20</span>
+          <span class="class-arrow">▶</span>
+        </div>
+        <div class="class-body">
+          <p>يعتمدون اعتماداً كلياً على الآخرين في جميع متطلبات الحياة.</p>
+          <ul>
+            <li>الإقامة في مراكز رعاية متخصصة</li>
+            <li>رعاية طبية مستمرة ومتابعة دقيقة</li>
+            <li>الهدف: توفير الراحة والكرامة وتحقيق الحد الأدنى من الاستجابة للبيئة</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matching game -->
+    <div class="card">
+      <div class="sec-title">🎮 تمرين: صِل الفئة بالتصنيف التربوي</div>
+      <div class="match-score" id="matchScore3">الأزواج المكتملة: 0 / 4</div>
+      <div class="match-area">
+        <div>
+          <div class="match-col-title">الفئة (حسب درجة الذكاء)</div>
+          <div class="match-col" id="leftCol3">
+            <div class="match-item" data-id="a" onclick="selectMatch(this,'left',3)">IQ: 50–70</div>
+            <div class="match-item" data-id="b" onclick="selectMatch(this,'left',3)">IQ: 35–50</div>
+            <div class="match-item" data-id="c" onclick="selectMatch(this,'left',3)">IQ: 20–35</div>
+            <div class="match-item" data-id="d" onclick="selectMatch(this,'left',3)">IQ: أقل من 20</div>
+          </div>
+        </div>
+        <div>
+          <div class="match-col-title">التصنيف التربوي</div>
+          <div class="match-col" id="rightCol3">
+            <div class="match-item" data-id="b" onclick="selectMatch(this,'right',3)">قابلون للتدريب</div>
+            <div class="match-item" data-id="d" onclick="selectMatch(this,'right',3)">اعتماديون كلياً</div>
+            <div class="match-item" data-id="a" onclick="selectMatch(this,'right',3)">قابلون للتعلم</div>
+            <div class="match-item" data-id="c" onclick="selectMatch(this,'right',3)">شديدو الإعاقة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="goSection(1)">← السابق</button>
+      <button class="btn btn-primary"   onclick="nextSection()">التالي: التشخيص ←</button>
+    </div>
+  </div>
+
+  <!-- SECTION 3: التشخيص -->
+  <div class="section" id="sec3">
+    <div class="card">
+      <div class="sec-title">🔍 التشخيص والتقييم</div>
+      <div class="highlight">
+        يقوم تشخيص الإعاقة الفكرية على <strong>المنهج التكاملي</strong> — لا يتخذه شخص واحد، بل فريق متعدد التخصصات.
+      </div>
+      <div class="info-grid" style="margin-top:12px;">
+        <div class="info-card">
+          <div class="ic-icon">👨‍⚕️</div>
+          <div class="ic-title">الطبيب</div>
+          <div class="ic-body">طبيب الأطفال أو الأعصاب — يستبعد الأسباب الطبية ويُقيّم الجانب البيولوجي</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🧪</div>
+          <div class="ic-title">الأخصائي النفسي</div>
+          <div class="ic-body">يُطبّق مقاييس الذكاء الموحدة ويُقيّم القدرات المعرفية بدقة</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">👨‍🏫</div>
+          <div class="ic-title">الأخصائي التربوي</div>
+          <div class="ic-body">يُقيّم مستوى الأداء الأكاديمي والمهارات التكيفية في البيئة التعليمية</div>
+        </div>
+        <div class="info-card">
+          <div class="ic-icon">🏠</div>
+          <div class="ic-title">الأسرة</div>
+          <div class="ic-body">توفر معلومات النمو المبكر وسلوك الطفل في البيئة المنزلية</div>
+        </div>
+      </div>
+      <div class="highlight" style="background:#fdf6e3; border-color:#f39c12; margin-top:12px;">
+        ⚠️ <strong>تنبيه مهم:</strong> لا يكفي اختبار الذكاء وحده — يُشترط تقييم السلوك التكيفي أيضاً، وتأكيد ظهور الحالة قبل سن 18.
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="goSection(2)">← السابق</button>
+      <button class="btn btn-primary"   onclick="nextSection()">التالي: التعامل ←</button>
+    </div>
+  </div>
+
+  <!-- SECTION 4: آداب التعامل -->
+  <div class="section" id="sec4">
+    <div class="card">
+      <div class="sec-title">🤝 آداب التعامل مع ذوي الإعاقة الفكرية</div>
+      <div class="do-dont">
+        <div class="do-list">
+          <h4>✅ افعل</h4>
+          <ul>
+            <li>تحدث بجمل قصيرة وواضحة</li>
+            <li>امنح وقتاً كافياً للاستجابة</li>
+            <li>كرر التعليمات عند الحاجة</li>
+            <li>احتفِ بكل تقدم مهما صغر</li>
+            <li>أشركهم في القرارات المناسبة</li>
+            <li>خاطبهم مباشرةً لا عبر الآخرين</li>
+          </ul>
+        </div>
+        <div class="dont-list">
+          <h4>❌ تجنب</h4>
+          <ul>
+            <li>لا تُقلّل من قدراتهم</li>
+            <li>لا تستخدم مصطلحات مهينة</li>
+            <li>لا تُتسرع في إنهاء الحديث</li>
+            <li>لا تتحدث عنهم كأنهم غير موجودين</li>
+            <li>لا تفترض عجزهم الكامل</li>
+            <li>لا تُقارنهم بالأفراد العاديين</li>
+          </ul>
+        </div>
+      </div>
+      <div class="highlight">
+        🎯 <strong>المبدأ الذهبي:</strong> انظر إليهم كأشخاص ذوي قدرات قابلة للنمو — وليس كحالات طبية فقط. التعليم الصحيح والبيئة الداعمة يصنعان فارقاً كبيراً.
+      </div>
+    </div>
+    <div class="nav-btns">
+      <button class="btn btn-secondary" onclick="goSection(3)">← السابق</button>
+      <button class="btn btn-primary"   onclick="nextSection()">التالي: الاختبار ←</button>
+    </div>
+  </div>
+
+  <!-- SECTION 5: الاختبار -->
+  <div class="section" id="sec5">
+    <div class="card" id="quizCard">
+      <div class="sec-title">✅ اختبر معلوماتك</div>
+      <div class="q-num" id="qNum"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="qOpts"></div>
+      <div class="feedback" id="qFeedback"></div>
+      <div class="nav-btns" style="margin-top:14px;">
+        <button class="btn btn-secondary" id="btnPrev" onclick="prevQ()" disabled>← السابق</button>
+        <button class="btn btn-primary"   id="btnNext" onclick="nextQ()">التالي ←</button>
+      </div>
+    </div>
+
+    <div class="card result-screen" id="resultCard" style="display:none;">
+      <div class="result-trophy" id="resTrophy">🏆</div>
+      <div class="result-score"  id="resScore"></div>
+      <div class="result-msg"    id="resMsg"></div>
+      <div class="score-bar-wrap"><div class="score-bar" id="resBar" style="width:0%"></div></div>
+      <div class="result-list"   id="resList"></div>
+
+      <div class="submit-panel" id="submitPanel">
+        <h3>📬 أرسل نتيجتك إلى المقرر</h3>
+        <p>يُسجَّل اطلاعك على المحاكاة ودرجتك في سجل المقرر.<br>يُرجى تعبئة البيانات وإرسالها.</p>
+        <input class="submit-field" id="studentName" type="text" placeholder="اسمك الكامل" />
+        <input class="submit-field" id="studentId"   type="text" placeholder="رقمك الجامعي" />
+        <div class="submit-info" id="submitInfo"></div>
+        <button class="btn btn-success" onclick="submitResult()" style="width:100%;border-radius:10px;">
+          ✅ إرسال النتيجة
+        </button>
+        <p style="font-size:.75rem;opacity:.7;margin-top:8px;">إذا لم يفتح النموذج تلقائياً <a id="formLink3" href="#" target="_blank" style="color:#f9e79f;">اضغط هنا</a></p>
+      </div>
+    </div>
+
+    <div class="nav-btns" style="margin-top:4px;">
+      <button class="btn btn-secondary" onclick="goSection(4)">← العودة للتعامل</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSc9521N4_q_M1Gdp_U3XX6-zkpdDHQ7CdSQ4CtJp3__1eP9mg/viewform";
+const SECTIONS = 6;
+const sectionDone = Array(SECTIONS).fill(false);
+let currentSection = 0;
+
+function updateProgress() {
+  const done = sectionDone.filter(Boolean).length;
+  const pct = Math.round((done / SECTIONS) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `تقدّمك: ${pct}% (${done} من ${SECTIONS} أقسام)`;
+  const pills = document.querySelectorAll('.nav-pill');
+  pills.forEach((p,i) => {
+    p.classList.remove('active','done');
+    if (i === currentSection) p.classList.add('active');
+    else if (sectionDone[i] && i !== currentSection) p.classList.add('done');
+  });
+}
+function goSection(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec'+n).classList.add('active');
+  currentSection = n;
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (n === 5) initQuiz();
+}
+function nextSection() {
+  sectionDone[currentSection] = true;
+  if (currentSection < SECTIONS-1) goSection(currentSection+1);
+}
+
+// Accordion
+function toggleClass(el) {
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.class-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) el.classList.add('open');
+}
+
+// Matching game
+let matchState3 = { selected: null, side: null, matched: [] };
+function selectMatch(el, side, game) {
+  if (el.classList.contains('matched')) return;
+  const st = matchState3;
+  if (st.selected && st.side === side) {
+    document.querySelectorAll('.match-item.selected').forEach(i=>i.classList.remove('selected'));
+    st.selected = null; st.side = null;
+  }
+  if (!st.selected) {
+    el.classList.add('selected');
+    st.selected = el.dataset.id; st.side = side;
+  } else {
+    if (st.side !== side && st.selected === el.dataset.id) {
+      // correct
+      document.querySelectorAll('.match-item.selected').forEach(i=>i.classList.remove('selected'));
+      document.querySelectorAll(`.match-item[data-id="${el.dataset.id}"]`).forEach(i=>i.classList.add('matched'));
+      st.matched.push(el.dataset.id); st.selected = null; st.side = null;
+      document.getElementById('matchScore3').textContent = `الأزواج المكتملة: ${st.matched.length} / 4`;
+    } else {
+      // wrong
+      el.classList.add('wrong-flash');
+      document.querySelectorAll('.match-item.selected').forEach(i=>i.classList.add('wrong-flash'));
+      setTimeout(()=>{
+        document.querySelectorAll('.match-item').forEach(i=>i.classList.remove('wrong-flash','selected'));
+      }, 600);
+      st.selected = null; st.side = null;
+    }
+  }
+}
+
+// Quiz
+const questions = [
+  {
+    q: 'ما الحد الأدنى لدرجة الذكاء التي يستخدمها المتخصصون لتشخيص الإعاقة الفكرية؟',
+    opts: ['85 درجة', '70 درجة', '55 درجة', '100 درجة'],
+    ans: 1,
+    fb: '✅ صحيح! درجة الذكاء 70 أو أقل هي أحد المعايير الجوهرية للتشخيص، مع توافر معيارَي السلوك التكيفي وسن الظهور.'
+  },
+  {
+    q: 'أيٌّ من التالي يُمثّل معياراً أساسياً لتشخيص الإعاقة الفكرية؟',
+    opts: ['ظهور القصور بعد سن 20', 'صعوبات في السلوك التكيفي فقط', 'قصور في القدرات العقلية + السلوك التكيفي + قبل 18 سنة', 'درجة ذكاء أقل من 50 فقط'],
+    ans: 2,
+    fb: '✅ ممتاز! يجب توافر ثلاثة معايير معاً: القصور العقلي، قصور السلوك التكيفي، والظهور قبل سن الثامنة عشرة.'
+  },
+  {
+    q: 'شخص ذو إعاقة فكرية IQ 55 ويستطيع اكتساب مهارات أكاديمية بسيطة — ما تصنيفه التربوي؟',
+    opts: ['اعتمادي كلياً', 'قابل للتدريب', 'قابل للتعلم', 'شديد الإعاقة'],
+    ans: 2,
+    fb: '✅ صحيح! درجة IQ 55 تقع في نطاق الإعاقة الفكرية البسيطة (50–70)، والتصنيف التربوي المقابل هو "القابلون للتعلم".'
+  },
+  {
+    q: 'لماذا لا يُعتمد على اختبار الذكاء وحده في تشخيص الإعاقة الفكرية؟',
+    opts: ['لأن الاختبارات غير دقيقة دائماً', 'لأن السلوك التكيفي والعمر شرطان أساسيان أيضاً', 'لأن الأطباء فقط يحق لهم التشخيص', 'لأن نتائجه تتغير مع الوقت'],
+    ans: 1,
+    fb: '✅ صحيح! التشخيص الشامل يتطلب تقييم القدرات العقلية + السلوك التكيفي + التحقق من ظهور القصور قبل 18.'
+  },
+  {
+    q: 'ما السلوك الصحيح عند التحدث مع شخص ذي إعاقة فكرية؟',
+    opts: ['الحديث عنه للآخرين بدلاً من مخاطبته مباشرة', 'استخدام جمل قصيرة وواضحة ومنح وقت كافٍ للاستجابة', 'تجاوز موضوع الإعاقة تماماً حتى لا يحرج', 'طرح أسئلة معقدة لقياس ذكائه'],
+    ans: 1,
+    fb: '✅ ممتاز! الجمل القصيرة والوقت الكافي والتواصل المباشر هي أساسيات التعامل الصحيح والمحترم.'
+  },
+  {
+    q: 'ما نسبة انتشار الإعاقة الفكرية تقريباً في المجتمع؟',
+    opts: ['أقل من 0.5%', '1 إلى 3%', '10%', '20%'],
+    ans: 1,
+    fb: '✅ صحيح! تتراوح نسبة انتشار الإعاقة الفكرية بين 1% و3% في المجتمع بحسب المعيار المستخدم للتشخيص.'
+  },
+  {
+    q: 'أيٌّ من التالي يصف الفئة التي تحتاج إلى رعاية مستمرة وتُصنَّف "اعتمادية كلياً"؟',
+    opts: ['IQ بين 50 و70', 'IQ بين 35 و50', 'IQ بين 20 و35', 'IQ أقل من 20'],
+    ans: 3,
+    fb: '✅ صحيح! الفئة الاعتمادية كلياً تمثل أشد أنواع الإعاقة الفكرية، وتتطلب رعاية شاملة ومستمرة في جميع متطلبات الحياة.'
+  },
+  {
+    q: 'ما الهدف الرئيسي من البرامج التعليمية لذوي الإعاقة الفكرية البسيطة (القابلين للتعلم)؟',
+    opts: ['الرعاية الطبية الكاملة فقط', 'الدمج في التعليم العادي أو سوق العمل البسيط', 'العزل في مراكز متخصصة', 'تطوير المواهب الفنية فقط'],
+    ans: 1,
+    fb: '✅ ممتاز! القابلون للتعلم يمتلكون قدرات تُمكّنهم من الاستفادة من التعليم الأكاديمي البسيط والاندماج في المجتمع.'
+  }
+];
+
+let qIndex = 0, userAnswers = [], answered = false;
+
+function initQuiz() {
+  qIndex = 0; userAnswers = []; answered = false;
+  document.getElementById('quizCard').style.display = 'block';
+  document.getElementById('resultCard').style.display = 'none';
+  renderQ();
+}
+function renderQ() {
+  answered = false;
+  const q = questions[qIndex];
+  document.getElementById('qNum').textContent = `سؤال ${qIndex+1} من ${questions.length}`;
+  document.getElementById('qText').textContent = q.q;
+  const fb = document.getElementById('qFeedback');
+  fb.className = 'feedback'; fb.textContent = '';
+  const prev = document.getElementById('btnPrev');
+  const next = document.getElementById('btnNext');
+  prev.disabled = qIndex === 0;
+  next.textContent = qIndex === questions.length-1 ? 'عرض النتيجة 🎯' : 'التالي ←';
+
+  const opts = document.getElementById('qOpts');
+  opts.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = o;
+    btn.onclick = () => handleAnswer(i);
+    if (userAnswers[qIndex] !== undefined) {
+      btn.disabled = true;
+      if (i === q.ans) btn.classList.add('correct');
+      else if (i === userAnswers[qIndex]) btn.classList.add('wrong');
+    }
+    opts.appendChild(btn);
+  });
+  if (userAnswers[qIndex] !== undefined) {
+    answered = true;
+    fb.className = 'feedback show ' + (userAnswers[qIndex]===q.ans?'ok':'bad');
+    fb.textContent = userAnswers[qIndex]===q.ans ? q.fb : '❌ ليست الإجابة الصحيحة. ' + q.fb;
+  }
+}
+function handleAnswer(i) {
+  if (answered) return;
+  answered = true;
+  userAnswers[qIndex] = i;
+  const q = questions[qIndex];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach((b,idx) => {
+    b.disabled = true;
+    if (idx===q.ans) b.classList.add('correct');
+    else if (idx===i) b.classList.add('wrong');
+  });
+  const fb = document.getElementById('qFeedback');
+  fb.className = 'feedback show ' + (i===q.ans?'ok':'bad');
+  fb.textContent = i===q.ans ? q.fb : '❌ ليست الإجابة الصحيحة. ' + q.fb;
+}
+function nextQ() {
+  if (qIndex < questions.length-1) { qIndex++; renderQ(); }
+  else showResult();
+}
+function prevQ() { if (qIndex > 0) { qIndex--; renderQ(); } }
+
+function showResult() {
+  const score = userAnswers.filter((a,i) => a===questions[i].ans).length;
+  const pct   = Math.round((score/questions.length)*100);
+  document.getElementById('quizCard').style.display = 'none';
+  const res = document.getElementById('resultCard');
+  res.style.display = 'block';
+  document.getElementById('resTrophy').textContent = pct>=80?'🏆':pct>=60?'🎖️':'📚';
+  document.getElementById('resScore').textContent  = `${score} / ${questions.length}`;
+  document.getElementById('resMsg').textContent    = pct>=80?'ممتاز! أتقنت مادة الإعاقة الفكرية بشكل رائع.':pct>=60?'جيد جداً! راجع النقاط التي أخطأت فيها.':'تحتاج لمراجعة المحتوى مرة أخرى.';
+  setTimeout(() => {
+    document.getElementById('resBar').style.width = pct+'%';
+  }, 200);
+  const list = document.getElementById('resList');
+  list.innerHTML = '';
+  questions.forEach((q,i) => {
+    const ok = userAnswers[i]===q.ans;
+    list.innerHTML += `<div class="result-item ${ok?'ok':'bad'}">${ok?'✅':'❌'} ${q.q.substring(0,50)}...</div>`;
+  });
+  document.getElementById('submitInfo').textContent = `نتيجتك: ${score} من ${questions.length} (${pct}%) — محاكاة: الإعاقة الفكرية — ${new Date().toLocaleDateString('ar-SA')}`;
+  sectionDone[5] = true;
+  updateProgress();
+}
+
+function submitResult() {
+  const name = document.getElementById('studentName').value.trim();
+  const sid  = document.getElementById('studentId').value.trim();
+  if (!name) { alert('يُرجى إدخال اسمك الكامل'); return; }
+  if (!sid)  { alert('يُرجى إدخال رقمك الجامعي'); return; }
+  const sc    = userAnswers.filter((a,i) => a===questions[i].ans).length;
+  const pct   = Math.round((sc / questions.length) * 100);
+  const simName = 'الإعاقة الفكرية';
+  const url = `https://docs.google.com/forms/d/e/1FAIpQLSc9521N4_q_M1Gdp_U3XX6-zkpdDHQ7CdSQ4CtJp3__1eP9mg/viewform?usp=pp_url`
+    + `&entry.1044979626=${encodeURIComponent(name)}`
+    + `&entry.519503709=${encodeURIComponent(sid)}`
+    + `&entry.1101271885=${encodeURIComponent(simName)}`
+    + `&entry.1761361484=${encodeURIComponent(sc + ' من ' + questions.length)}`
+    + `&entry.2005680265=${encodeURIComponent(pct + '%')}`;
+  document.getElementById('formLink3').href = url;
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
